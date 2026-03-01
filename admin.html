@@ -420,7 +420,7 @@
             <thead>
               <tr>
                 <th>ID</th><th>Datum narudžbine</th><th>Kupac</th>
-                <th>Selo</th><th>Dostava</th><th>Ukupno</th>
+                <th>Mesto</th><th>Dostava</th><th>Ukupno</th>
                 <th>Status</th><th>Detalji</th>
               </tr>
             </thead>
@@ -761,7 +761,7 @@ function clearAllOrders() {
 function exportOrders() {
   const orders = getOrders();
   const csv = [
-    ['ID', 'Datum', 'Kupac', 'Telefon', 'Adresa', 'Selo', 'Datum dostave', 'Termin', 'Ukupno', 'Status'],
+    ['ID', 'Datum', 'Kupac', 'Telefon', 'Adresa', 'Mesto', 'Datum dostave', 'Termin', 'Ukupno', 'Status'],
     ...orders.map(o => [
       o.id, new Date(o.createdAt).toLocaleString('sr-RS'),
       o.customer.name, o.customer.phone,
