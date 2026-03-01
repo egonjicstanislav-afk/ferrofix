@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FerroFix — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --steel: #1a1f2e;
+    --steel-mid: #252b3b;
+    --steel-light: #2f3749;
+    --rust: #d4500a;
+    --rust-light: #e8681f;
+    --gold: #f0a500;
+    --smoke: #8a95a8;
+    --fog: #c8d0dc;
+    --white: #f4f6f9;
+    --danger: #c0392b;
+    --success: #27ae60;
+    --warning: #f39c12;
+    --info: #2980b9;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Source Sans 3', sans-serif; background: var(--steel); color: var(--white); min-height: 100vh; }
+
+  /* LOGIN */
+  .login-page {
+    min-height: 100vh; display: flex;
+    align-items: center; justify-content: center;
+    background: radial-gradient(ellipse at center, #252b3b 0%, #0f1219 100%);
+  }
+  .login-box {
+    background: var(--steel-mid); border: 2px solid var(--rust);
+    padding: 48px 40px; width: 380px; text-align: center;
+  }
+  .login-box h1 {
+    font-family: 'Oswald', sans-serif; font-size: 28px;
+    letter-spacing: 4px; color: var(--fog); margin-bottom: 6px;
+  }
+  .login-box p { color: var(--smoke); font-size: 14px; margin-bottom: 30px; }
+  .login-input {
+    width: 100%; background: var(--steel);
+    border: 1px solid var(--steel-light); border-left: 3px solid var(--rust);
+    color: var(--white); padding: 14px 16px; font-size: 16px;
+    outline: none; margin-bottom: 16px; font-family: 'Source Sans 3', sans-serif;
+  }
+  .login-input:focus { border-color: var(--gold); }
+  .login-btn {
+    width: 100%; background: var(--rust); border: none;
+    color: var(--white); padding: 14px;
+    font-family: 'Oswald', sans-serif; font-size: 17px;
+    letter-spacing: 3px; cursor: pointer; transition: background 0.2s;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+  }
+  .login-btn:hover { background: var(--rust-light); }
+  .login-error { color: #e74c3c; font-size: 13px; margin-top: 12px; }
+
+  /* ADMIN LAYOUT */
+  .admin-wrap { display: flex; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 240px; background: #0f1219;
+    border-right: 2px solid var(--steel-light);
+    position: fixed; top: 0; bottom: 0; left: 0;
+    display: flex; flex-direction: column; z-index: 50;
+  }
+  .sidebar-logo {
+    padding: 24px 20px; border-bottom: 1px solid var(--steel-light);
+  }
+  .sidebar-logo .logo-text {
+    font-family: 'Oswald', sans-serif; font-size: 22px;
+    letter-spacing: 2px; color: var(--white);
+  }
+  .sidebar-logo .logo-text span { color: var(--rust); }
+  .sidebar-logo small { font-size: 11px; color: var(--smoke); letter-spacing: 2px; display: block; margin-top: 2px; }
+
+  .nav { flex: 1; padding: 16px 0; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 20px; cursor: pointer;
+    font-family: 'Oswald', sans-serif; font-size: 15px;
+    letter-spacing: 1px; color: var(--smoke);
+    transition: all 0.2s; border-left: 3px solid transparent;
+    text-decoration: none;
+  }
+  .nav-item:hover { color: var(--white); background: var(--steel-light); }
+  .nav-item.active {
+    color: var(--white); background: rgba(212,80,10,0.15);
+    border-left-color: var(--rust);
+  }
+  .nav-badge {
+    margin-left: auto; background: var(--rust); color: var(--white);
+    border-radius: 10px; padding: 2px 8px; font-size: 12px;
+    font-weight: 700;
+  }
+
+  .sidebar-footer {
+    padding: 16px 20px; border-top: 1px solid var(--steel-light);
+    font-size: 13px; color: var(--smoke);
+  }
+  .logout-btn {
+    background: none; border: 1px solid var(--steel-light);
+    color: var(--smoke); padding: 8px 16px;
+    font-family: 'Oswald', sans-serif; font-size: 13px;
+    letter-spacing: 1px; cursor: pointer; transition: all 0.2s;
+    width: 100%; text-align: left; margin-top: 8px;
+  }
+  .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+  /* CONTENT */
+  .content {
+    margin-left: 240px; flex: 1; padding: 0;
+  }
+  .content-header {
+    background: var(--steel-mid);
+    border-bottom: 2px solid var(--steel-light);
+    padding: 20px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .content-header h1 {
+    font-family: 'Oswald', sans-serif; font-size: 22px;
+    letter-spacing: 3px; color: var(--fog);
+  }
+
+  .content-body { padding: 28px 32px; }
+
+  /* TABS */
+  .tab-section { display: none; }
+  .tab-section.active { display: block; }
+
+  /* STATS */
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--steel-mid); border: 1px solid var(--steel-light);
+    border-top: 3px solid var(--rust);
+    padding: 20px;
+  }
+  .stat-label {
+    font-family: 'Oswald', sans-serif; font-size: 12px;
+    letter-spacing: 2px; color: var(--smoke); text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .stat-value {
+    font-family: 'Oswald', sans-serif; font-size: 28px;
+    font-weight: 700; color: var(--gold);
+  }
+  .stat-sub { font-size: 12px; color: var(--smoke); margin-top: 4px; }
+
+  /* ORDERS TABLE */
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%; border-collapse: collapse;
+    background: var(--steel-mid);
+  }
+  thead tr {
+    background: var(--steel);
+    border-bottom: 2px solid var(--rust);
+  }
+  th {
+    padding: 12px 16px; text-align: left;
+    font-family: 'Oswald', sans-serif; font-size: 13px;
+    letter-spacing: 2px; color: var(--smoke);
+    text-transform: uppercase; white-space: nowrap;
+  }
+  td {
+    padding: 12px 16px; font-size: 14px;
+    border-bottom: 1px solid var(--steel-light);
+    vertical-align: top;
+  }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .order-id {
+    font-family: 'Oswald', sans-serif; color: var(--gold); letter-spacing: 1px;
+  }
+
+  /* BADGES */
+  .badge {
+    display: inline-block; padding: 3px 10px;
+    font-family: 'Oswald', sans-serif; font-size: 11px;
+    letter-spacing: 1px; text-transform: uppercase; border-radius: 2px;
+  }
+  .badge-nova { background: rgba(41,128,185,0.2); color: #5dade2; border: 1px solid #2980b9; }
+  .badge-potvrdjeno { background: rgba(39,174,96,0.2); color: #58d68d; border: 1px solid #27ae60; }
+  .badge-u-dostavi { background: rgba(243,156,18,0.2); color: #f8c471; border: 1px solid #f39c12; }
+  .badge-isporuceno { background: rgba(46,204,113,0.15); color: var(--smoke); border: 1px solid var(--steel-light); }
+  .badge-otkazano { background: rgba(192,57,43,0.2); color: #e74c3c; border: 1px solid var(--danger); }
+
+  .status-select {
+    background: var(--steel); border: 1px solid var(--steel-light);
+    color: var(--white); padding: 5px 8px; font-size: 13px;
+    font-family: 'Source Sans 3', sans-serif; cursor: pointer;
+    outline: none;
+  }
+
+  .expand-btn {
+    background: none; border: 1px solid var(--steel-light);
+    color: var(--smoke); padding: 4px 10px; cursor: pointer;
+    font-family: 'Oswald', sans-serif; font-size: 11px;
+    letter-spacing: 1px; transition: all 0.2s;
+  }
+  .expand-btn:hover { border-color: var(--rust); color: var(--white); }
+
+  .order-detail {
+    display: none; padding: 16px;
+    background: var(--steel);
+    border: 1px solid var(--steel-light); margin-top: 8px;
+    font-size: 13px; line-height: 1.8; color: var(--fog);
+  }
+  .order-detail.open { display: block; }
+  .order-detail strong { color: var(--white); font-family: 'Oswald', sans-serif; font-size: 14px; letter-spacing: 1px; }
+
+  /* INVENTORY */
+  .toolbar {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .btn {
+    background: var(--rust); border: none; color: var(--white);
+    padding: 10px 20px; cursor: pointer;
+    font-family: 'Oswald', sans-serif; font-size: 14px;
+    letter-spacing: 1px; transition: background 0.2s;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  }
+  .btn:hover { background: var(--rust-light); }
+  .btn-sec {
+    background: var(--steel-mid); border: 1px solid var(--steel-light);
+    color: var(--smoke);
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  }
+  .btn-sec:hover { border-color: var(--rust); color: var(--white); }
+  .btn-danger { background: var(--danger); }
+  .btn-danger:hover { background: #e74c3c; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+  .search-admin {
+    flex: 1; min-width: 200px;
+    background: var(--steel-mid); border: 1px solid var(--steel-light);
+    border-left: 3px solid var(--rust);
+    color: var(--white); padding: 10px 14px;
+    font-family: 'Source Sans 3', sans-serif; font-size: 14px;
+    outline: none;
+  }
+  .search-admin::placeholder { color: var(--smoke); }
+
+  .stock-low { color: #e74c3c; font-weight: 600; }
+  .stock-ok { color: var(--success); }
+
+  .edit-input {
+    background: var(--steel); border: 1px solid var(--rust);
+    color: var(--white); padding: 4px 8px; font-size: 13px;
+    font-family: 'Source Sans 3', sans-serif; width: 100%; outline: none;
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+    z-index: 300; display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal-box {
+    background: var(--steel-mid); border: 2px solid var(--rust);
+    padding: 32px; width: 520px; max-width: 95vw;
+    animation: slideUp 0.2s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .modal-box h2 {
+    font-family: 'Oswald', sans-serif; font-size: 20px;
+    letter-spacing: 2px; margin-bottom: 24px;
+    padding-bottom: 12px; border-bottom: 1px solid var(--steel-light);
+    color: var(--fog);
+  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { margin-bottom: 14px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group label {
+    display: block; font-family: 'Oswald', sans-serif;
+    font-size: 12px; letter-spacing: 1px;
+    color: var(--smoke); text-transform: uppercase; margin-bottom: 5px;
+  }
+  .form-control-a {
+    width: 100%; background: var(--steel);
+    border: 1px solid var(--steel-light); border-left: 3px solid var(--rust);
+    color: var(--white); padding: 10px 12px;
+    font-family: 'Source Sans 3', sans-serif; font-size: 14px; outline: none;
+  }
+  .form-control-a:focus { border-color: var(--gold); }
+  select.form-control-a option { background: var(--steel-mid); }
+  .modal-actions {
+    display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;
+  }
+
+  /* SLOTS */
+  .slot-card {
+    background: var(--steel-mid); border: 1px solid var(--steel-light);
+    padding: 20px; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  }
+  .slot-name {
+    font-family: 'Oswald', sans-serif; font-size: 18px; flex: 1;
+  }
+  .slot-time { color: var(--smoke); font-size: 14px; flex: 1; }
+  .toggle-btn {
+    background: none; border: 2px solid;
+    padding: 6px 16px; cursor: pointer;
+    font-family: 'Oswald', sans-serif; font-size: 13px;
+    letter-spacing: 1px; transition: all 0.2s;
+  }
+  .toggle-btn.on { border-color: var(--success); color: var(--success); }
+  .toggle-btn.off { border-color: var(--danger); color: var(--danger); }
+  .toggle-btn:hover { filter: brightness(1.3); }
+
+  .slot-label-input {
+    background: var(--steel); border: 1px solid var(--steel-light);
+    border-left: 2px solid var(--rust);
+    color: var(--white); padding: 6px 10px; font-size: 14px;
+    font-family: 'Source Sans 3', sans-serif; outline: none;
+    flex: 2;
+  }
+  .slot-label-input:focus { border-color: var(--gold); }
+
+  /* EMPTY */
+  .empty-state {
+    text-align: center; padding: 60px;
+    color: var(--smoke);
+  }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--steel); }
+  ::-webkit-scrollbar-thumb { background: var(--rust); }
+
+  @media (max-width: 900px) {
+    .sidebar { width: 60px; }
+    .nav-item span, .sidebar-logo small, .sidebar-logo .logo-text, .sidebar-footer { display: none; }
+    .nav-item { padding: 16px; justify-content: center; }
+    .nav-badge { display: none; }
+    .content { margin-left: 60px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div class="login-page" id="loginPage">
+  <div class="login-box">
+    <h1>⚙ ADMIN</h1>
+    <p>FerroFix upravljački panel</p>
+    <input type="password" class="login-input" id="loginPass"
+      placeholder="Lozinka" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">PRIJAVA →</button>
+    <div class="login-error" id="loginError"></div>
+    <div style="margin-top:16px;font-size:12px;color:var(--smoke)">
+      Podrazumevana lozinka: <strong style="color:var(--gold)">ferrofix2024</strong>
+      <br>Promenite je u podešavanjima!
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="admin-wrap" id="adminWrap" style="display:none">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-text">Ferro<span>Fix</span></div>
+      <small>ADMIN PANEL</small>
+    </div>
+    <nav class="nav">
+      <a class="nav-item active" onclick="showTab('orders')" href="#">
+        📋 <span>Narudžbine</span>
+        <span class="nav-badge" id="newOrdersBadge">0</span>
+      </a>
+      <a class="nav-item" onclick="showTab('inventory')" href="#">
+        📦 <span>Inventar</span>
+      </a>
+      <a class="nav-item" onclick="showTab('slots')" href="#">
+        🕐 <span>Termini dostave</span>
+      </a>
+      <a class="nav-item" onclick="showTab('settings')" href="#">
+        ⚙ <span>Podešavanja</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div>Miloš Nikolić</div>
+      <button class="logout-btn" onclick="doLogout()">Odjava</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- ORDERS TAB -->
+    <div class="tab-section active" id="tab-orders">
+      <div class="content-header">
+        <h1>📋 NARUDŽBINE</h1>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="filterStatus" onchange="renderOrders()"
+            style="background:var(--steel-mid);border:1px solid var(--steel-light);border-left:2px solid var(--rust);color:var(--white);padding:8px 12px;font-size:13px;outline:none;font-family:'Source Sans 3',sans-serif;">
+            <option value="">Sve narudžbine</option>
+            <option value="nova">Nove</option>
+            <option value="potvrdjeno">Potvrđene</option>
+            <option value="u-dostavi">U dostavi</option>
+            <option value="isporuceno">Isporučene</option>
+            <option value="otkazano">Otkazane</option>
+          </select>
+          <button class="btn btn-sec btn-sm" onclick="exportOrders()">⬇ Export</button>
+        </div>
+      </div>
+      <div class="content-body">
+        <div class="stats-grid" id="orderStats"></div>
+        <div class="table-wrap">
+          <table id="ordersTable">
+            <thead>
+              <tr>
+                <th>ID</th><th>Datum narudžbine</th><th>Kupac</th>
+                <th>Selo</th><th>Dostava</th><th>Ukupno</th>
+                <th>Status</th><th>Detalji</th>
+              </tr>
+            </thead>
+            <tbody id="ordersBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="ordersEmpty" style="display:none">
+          <div class="icon">📋</div>
+          <div>Nema narudžbina</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVENTORY TAB -->
+    <div class="tab-section" id="tab-inventory">
+      <div class="content-header">
+        <h1>📦 INVENTAR</h1>
+        <button class="btn" onclick="openProductModal(null)">+ Dodaj artikal</button>
+      </div>
+      <div class="content-body">
+        <div class="toolbar">
+          <input type="text" class="search-admin" id="invSearch"
+            placeholder="🔍 Pretraži artikle..." oninput="renderInventory()">
+          <select id="invCatFilter" onchange="renderInventory()"
+            style="background:var(--steel-mid);border:1px solid var(--steel-light);border-left:2px solid var(--rust);color:var(--white);padding:10px 14px;font-size:14px;outline:none;font-family:'Source Sans 3',sans-serif;">
+            <option value="">Sve kategorije</option>
+            <option>Alat</option>
+            <option>Vijci i ekseri</option>
+            <option>Boje i lakovi</option>
+            <option>Građevinski materijal</option>
+            <option>Vodoinstalacije</option>
+            <option>Elektro materijal</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Naziv</th><th>Kategorija</th><th>Cena (RSD)</th>
+                <th>Jedinica</th><th>Na stanju</th><th>Akcije</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLOTS TAB -->
+    <div class="tab-section" id="tab-slots">
+      <div class="content-header">
+        <h1>🕐 TERMINI DOSTAVE</h1>
+        <button class="btn" onclick="addSlot()">+ Dodaj termin</button>
+      </div>
+      <div class="content-body">
+        <p style="color:var(--smoke);margin-bottom:20px;font-size:14px">
+          Ovde podešavate termine dostave koji će biti vidljivi mušterijama pri narudžbini.
+          Možete ih uključiti/isključiti bez brisanja.
+        </p>
+        <div id="slotsList"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS TAB -->
+    <div class="tab-section" id="tab-settings">
+      <div class="content-header">
+        <h1>⚙ PODEŠAVANJA</h1>
+      </div>
+      <div class="content-body" style="max-width:480px">
+        <div style="background:var(--steel-mid);border:1px solid var(--steel-light);border-top:3px solid var(--rust);padding:24px;margin-bottom:20px">
+          <h3 style="font-family:'Oswald',sans-serif;font-size:16px;letter-spacing:2px;margin-bottom:18px;color:var(--fog)">PROMENA LOZINKE</h3>
+          <div class="form-group">
+            <label>Trenutna lozinka</label>
+            <input type="password" class="form-control-a" id="curPass" placeholder="••••••••">
+          </div>
+          <div class="form-group">
+            <label>Nova lozinka</label>
+            <input type="password" class="form-control-a" id="newPass" placeholder="••••••••">
+          </div>
+          <div class="form-group">
+            <label>Potvrdi novu lozinku</label>
+            <input type="password" class="form-control-a" id="confPass" placeholder="••••••••">
+          </div>
+          <button class="btn" onclick="changePass()">SAČUVAJ LOZINKU</button>
+          <div id="passMsg" style="margin-top:10px;font-size:13px"></div>
+        </div>
+        <div style="background:var(--steel-mid);border:1px solid var(--steel-light);border-top:3px solid var(--danger);padding:24px">
+          <h3 style="font-family:'Oswald',sans-serif;font-size:16px;letter-spacing:2px;margin-bottom:12px;color:var(--fog)">OPASNA ZONA</h3>
+          <p style="color:var(--smoke);font-size:13px;margin-bottom:16px">Brisanje svih podataka je nepovratno!</p>
+          <button class="btn btn-danger" onclick="clearAllOrders()">Obriši sve narudžbine</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRODUCT MODAL -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal-box">
+    <h2 id="productModalTitle">NOVI ARTIKAL</h2>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>Naziv artikla *</label>
+        <input type="text" class="form-control-a" id="pName" placeholder="npr. Čekić 500g">
+      </div>
+      <div class="form-group">
+        <label>Kategorija *</label>
+        <select class="form-control-a" id="pCat">
+          <option>Alat</option>
+          <option>Vijci i ekseri</option>
+          <option>Boje i lakovi</option>
+          <option>Građevinski materijal</option>
+          <option>Vodoinstalacije</option>
+          <option>Elektro materijal</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Jedinica mere</label>
+        <select class="form-control-a" id="pUnit">
+          <option value="kom">kom</option>
+          <option value="m">m</option>
+          <option value="m²">m²</option>
+          <option value="kg">kg</option>
+          <option value="lit">lit</option>
+          <option value="kan">kan</option>
+          <option value="pak">pak</option>
+          <option value="set">set</option>
+          <option value="vrća">vrća</option>
+          <option value="rol">rol</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Cena (RSD) *</label>
+        <input type="number" class="form-control-a" id="pPrice" placeholder="0" min="0">
+      </div>
+      <div class="form-group">
+        <label>Količina na stanju *</label>
+        <input type="number" class="form-control-a" id="pStock" placeholder="0" min="0">
+      </div>
+      <div class="form-group full">
+        <label>Opis (opciono)</label>
+        <input type="text" class="form-control-a" id="pDesc" placeholder="Kratki opis artikla...">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-sec" onclick="closeProductModal()">OTKAŽI</button>
+      <button class="btn" onclick="saveProduct()">SAČUVAJ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════
+const ADMIN_PASS_KEY = 'ff_admin_pass';
+
+function getPass() {
+  return localStorage.getItem(ADMIN_PASS_KEY) || 'ferrofix2024';
+}
+
+function doLogin() {
+  const input = document.getElementById('loginPass').value;
+  if (input === getPass()) {
+    sessionStorage.setItem('ff_admin_logged', '1');
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('adminWrap').style.display = 'flex';
+    initAdmin();
+  } else {
+    document.getElementById('loginError').textContent = 'Pogrešna lozinka. Pokušajte ponovo.';
+    document.getElementById('loginPass').value = '';
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('ff_admin_logged');
+  location.reload();
+}
+
+function changePass() {
+  const cur = document.getElementById('curPass').value;
+  const nw = document.getElementById('newPass').value;
+  const conf = document.getElementById('confPass').value;
+  const msg = document.getElementById('passMsg');
+  if (cur !== getPass()) { msg.style.color='#e74c3c'; msg.textContent='Pogrešna trenutna lozinka.'; return; }
+  if (nw.length < 6) { msg.style.color='#e74c3c'; msg.textContent='Nova lozinka mora imati min. 6 znakova.'; return; }
+  if (nw !== conf) { msg.style.color='#e74c3c'; msg.textContent='Lozinke se ne podudaraju.'; return; }
+  localStorage.setItem(ADMIN_PASS_KEY, nw);
+  msg.style.color = '#58d68d';
+  msg.textContent = 'Lozinka uspešno promenjena!';
+  document.getElementById('curPass').value='';
+  document.getElementById('newPass').value='';
+  document.getElementById('confPass').value='';
+}
+
+// ══════════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════════
+function showTab(tab) {
+  document.querySelectorAll('.tab-section').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.currentTarget.classList.add('active');
+
+  if (tab === 'orders') renderOrders();
+  if (tab === 'inventory') renderInventory();
+  if (tab === 'slots') renderSlots();
+}
+
+// ══════════════════════════════════════════════
+// DATA HELPERS — [DB] ove treba zameniti API pozivima
+// ══════════════════════════════════════════════
+function getOrders() { return JSON.parse(localStorage.getItem('ff_orders') || '[]'); }
+function saveOrders(orders) { localStorage.setItem('ff_orders', JSON.stringify(orders)); }
+function getProducts() { return JSON.parse(localStorage.getItem('ff_products') || '[]'); }
+function saveProducts(products) { localStorage.setItem('ff_products', JSON.stringify(products)); }
+
+const SLOTS_KEY = 'ff_slots';
+function getSlots() {
+  const saved = localStorage.getItem(SLOTS_KEY);
+  if (saved) return JSON.parse(saved);
+  return [
+    { id: 'jutro', label: '🌅 Pre podne', time: '08:00 – 13:00', active: true },
+    { id: 'popodne', label: '🌇 Posle podne', time: '13:00 – 18:00', active: true }
+  ];
+}
+function saveSlots(slots) { localStorage.setItem(SLOTS_KEY, JSON.stringify(slots)); }
+
+// ══════════════════════════════════════════════
+// ORDERS
+// ══════════════════════════════════════════════
+function renderOrders() {
+  const orders = getOrders();
+  const filter = document.getElementById('filterStatus').value;
+  const filtered = filter ? orders.filter(o => o.status === filter) : orders;
+
+  // Stats
+  const nova = orders.filter(o => o.status === 'nova').length;
+  const today = new Date().toDateString();
+  const todayOrders = orders.filter(o => new Date(o.createdAt).toDateString() === today);
+  const todayRevenue = todayOrders.reduce((s,o)=> s + o.total, 0);
+  const totalRevenue = orders.filter(o=>o.status==='isporuceno').reduce((s,o)=>s+o.total,0);
+
+  document.getElementById('orderStats').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Nove narudžbine</div>
+      <div class="stat-value">${nova}</div>
+      <div class="stat-sub">Čekaju potvrdu</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Danas naručeno</div>
+      <div class="stat-value">${todayOrders.length}</div>
+      <div class="stat-sub">${todayRevenue.toLocaleString('sr')} RSD</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Ukupno narudžbina</div>
+      <div class="stat-value">${orders.length}</div>
+      <div class="stat-sub">Sve vreme</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Prihod (isporučeno)</div>
+      <div class="stat-value">${Math.floor(totalRevenue/1000)}K</div>
+      <div class="stat-sub">${totalRevenue.toLocaleString('sr')} RSD</div>
+    </div>
+  `;
+
+  document.getElementById('newOrdersBadge').textContent = nova;
+
+  if (filtered.length === 0) {
+    document.getElementById('ordersEmpty').style.display = 'block';
+    document.getElementById('ordersBody').innerHTML = '';
+    return;
+  }
+  document.getElementById('ordersEmpty').style.display = 'none';
+
+  document.getElementById('ordersBody').innerHTML = filtered.map(order => {
+    const date = new Date(order.createdAt);
+    const dateStr = date.toLocaleDateString('sr-RS') + ' ' + date.toLocaleTimeString('sr-RS', {hour:'2-digit',minute:'2-digit'});
+    const itemsSum = order.items.map(i => `${i.name} ×${i.qty}`).join(', ');
+
+    return `
+      <tr>
+        <td><span class="order-id">${order.id}</span></td>
+        <td style="white-space:nowrap">${dateStr}</td>
+        <td>
+          <strong>${order.customer.name}</strong><br>
+          <a href="tel:${order.customer.phone}" style="color:var(--gold);font-size:13px">${order.customer.phone}</a>
+        </td>
+        <td>${order.customer.village}</td>
+        <td style="white-space:nowrap">
+          📅 ${order.delivery.date}<br>
+          <span style="font-size:12px;color:var(--smoke)">${order.delivery.slotLabel || ''}</span>
+        </td>
+        <td style="white-space:nowrap;font-family:'Oswald',sans-serif;color:var(--gold)">
+          ${order.total.toLocaleString('sr')} RSD
+        </td>
+        <td>
+          <select class="status-select" onchange="updateOrderStatus('${order.id}', this.value)">
+            <option value="nova" ${order.status==='nova'?'selected':''}>🔵 Nova</option>
+            <option value="potvrdjeno" ${order.status==='potvrdjeno'?'selected':''}>✅ Potvrđena</option>
+            <option value="u-dostavi" ${order.status==='u-dostavi'?'selected':''}>🚚 U dostavi</option>
+            <option value="isporuceno" ${order.status==='isporuceno'?'selected':''}>✔ Isporučena</option>
+            <option value="otkazano" ${order.status==='otkazano'?'selected':''}>❌ Otkazana</option>
+          </select>
+        </td>
+        <td>
+          <button class="expand-btn" onclick="toggleDetail('${order.id}')">DETALJI ▾</button>
+          <div class="order-detail" id="detail_${order.id}">
+            <strong>ADRESA:</strong> ${order.customer.address}, ${order.customer.village}<br>
+            <strong>ARTIKLI:</strong> ${itemsSum}<br>
+            ${order.customer.note ? `<strong>NAPOMENA:</strong> ${order.customer.note}` : ''}
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function toggleDetail(id) {
+  const el = document.getElementById('detail_' + id);
+  el.classList.toggle('open');
+}
+
+function updateOrderStatus(id, status) {
+  // [DB] → PATCH /api/orders/:id { status }
+  const orders = getOrders();
+  const order = orders.find(o => o.id === id);
+  if (order) { order.status = status; saveOrders(orders); renderOrders(); }
+}
+
+function clearAllOrders() {
+  if (confirm('Sigurno brišete SVE narudžbine? Ova akcija je nepovratna!')) {
+    localStorage.removeItem('ff_orders');
+    renderOrders();
+  }
+}
+
+function exportOrders() {
+  const orders = getOrders();
+  const csv = [
+    ['ID', 'Datum', 'Kupac', 'Telefon', 'Adresa', 'Selo', 'Datum dostave', 'Termin', 'Ukupno', 'Status'],
+    ...orders.map(o => [
+      o.id, new Date(o.createdAt).toLocaleString('sr-RS'),
+      o.customer.name, o.customer.phone,
+      o.customer.address, o.customer.village,
+      o.delivery.date, o.delivery.slotLabel,
+      o.total, o.status
+    ])
+  ].map(row => row.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'ferrofix_narudzbine_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+}
+
+// ══════════════════════════════════════════════
+// INVENTORY
+// ══════════════════════════════════════════════
+function renderInventory() {
+  const search = document.getElementById('invSearch').value.toLowerCase();
+  const catFilter = document.getElementById('invCatFilter').value;
+  let products = getProducts();
+
+  if (catFilter) products = products.filter(p => p.category === catFilter);
+  if (search) products = products.filter(p =>
+    p.name.toLowerCase().includes(search) || p.category.toLowerCase().includes(search));
+
+  document.getElementById('inventoryBody').innerHTML = products.map(p => `
+    <tr>
+      <td><strong>${p.name}</strong><br><span style="font-size:12px;color:var(--smoke)">${p.desc||''}</span></td>
+      <td><span class="badge badge-nova" style="font-size:11px">${p.category}</span></td>
+      <td style="font-family:'Oswald',sans-serif;color:var(--gold)">${p.price.toLocaleString('sr')}</td>
+      <td>${p.unit}</td>
+      <td class="${p.stock < 5 ? 'stock-low' : 'stock-ok'}">${p.stock}
+        ${p.stock < 5 ? ' ⚠' : ''}
+      </td>
+      <td>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-sm" onclick="openProductModal('${p.id}')">✏ Uredi</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteProduct('${p.id}')">✕</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ══════════════════════════════════════════════
+// PRODUCT MODAL
+// ══════════════════════════════════════════════
+let editingProductId = null;
+
+function openProductModal(id) {
+  editingProductId = id;
+  const modal = document.getElementById('productModal');
+  if (id) {
+    const products = getProducts();
+    const p = products.find(x => x.id === id);
+    document.getElementById('productModalTitle').textContent = 'UREDI ARTIKAL';
+    document.getElementById('pName').value = p.name;
+    document.getElementById('pCat').value = p.category;
+    document.getElementById('pUnit').value = p.unit;
+    document.getElementById('pPrice').value = p.price;
+    document.getElementById('pStock').value = p.stock;
+    document.getElementById('pDesc').value = p.desc || '';
+  } else {
+    document.getElementById('productModalTitle').textContent = 'NOVI ARTIKAL';
+    document.getElementById('pName').value = '';
+    document.getElementById('pPrice').value = '';
+    document.getElementById('pStock').value = '';
+    document.getElementById('pDesc').value = '';
+  }
+  modal.classList.add('open');
+}
+
+function closeProductModal() {
+  document.getElementById('productModal').classList.remove('open');
+}
+
+function saveProduct() {
+  const name = document.getElementById('pName').value.trim();
+  const cat = document.getElementById('pCat').value;
+  const unit = document.getElementById('pUnit').value;
+  const price = parseFloat(document.getElementById('pPrice').value);
+  const stock = parseInt(document.getElementById('pStock').value);
+  const desc = document.getElementById('pDesc').value.trim();
+
+  if (!name || isNaN(price) || isNaN(stock)) {
+    alert('Popunite obavezna polja: naziv, cena, količina.');
+    return;
+  }
+
+  // [DB] → POST/PUT /api/products
+  const products = getProducts();
+  if (editingProductId) {
+    const idx = products.findIndex(p => p.id === editingProductId);
+    if (idx > -1) products[idx] = { ...products[idx], name, category: cat, unit, price, stock, desc };
+  } else {
+    products.push({
+      id: 'p' + Date.now(),
+      name, category: cat, unit, price, stock, desc
+    });
+  }
+  saveProducts(products);
+  closeProductModal();
+  renderInventory();
+}
+
+function deleteProduct(id) {
+  if (!confirm('Obrisati ovaj artikal?')) return;
+  // [DB] → DELETE /api/products/:id
+  const products = getProducts().filter(p => p.id !== id);
+  saveProducts(products);
+  renderInventory();
+}
+
+// ══════════════════════════════════════════════
+// SLOTS
+// ══════════════════════════════════════════════
+function renderSlots() {
+  const slots = getSlots();
+  document.getElementById('slotsList').innerHTML = slots.map((s, i) => `
+    <div class="slot-card">
+      <input class="slot-label-input" id="sLabel_${i}" value="${s.label}" style="flex:2">
+      <input class="slot-label-input" id="sTime_${i}" value="${s.time}" style="flex:1">
+      <button class="toggle-btn ${s.active ? 'on' : 'off'}" onclick="toggleSlot(${i})">
+        ${s.active ? '✓ AKTIVAN' : '✗ ISKLJUČEN'}
+      </button>
+      <button class="btn btn-sm" onclick="saveSlot(${i})">SAČUVAJ</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteSlot(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function toggleSlot(idx) {
+  const slots = getSlots();
+  slots[idx].active = !slots[idx].active;
+  saveSlots(slots);
+  renderSlots();
+}
+
+function saveSlot(idx) {
+  const slots = getSlots();
+  slots[idx].label = document.getElementById('sLabel_' + idx).value;
+  slots[idx].time = document.getElementById('sTime_' + idx).value;
+  saveSlots(slots);
+  renderSlots();
+}
+
+function addSlot() {
+  const slots = getSlots();
+  slots.push({
+    id: 'slot' + Date.now(),
+    label: '🕒 Novi termin',
+    time: '00:00 – 00:00',
+    active: true
+  });
+  saveSlots(slots);
+  renderSlots();
+}
+
+function deleteSlot(idx) {
+  if (!confirm('Obrisati ovaj termin?')) return;
+  const slots = getSlots();
+  slots.splice(idx, 1);
+  saveSlots(slots);
+  renderSlots();
+}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+function initAdmin() {
+  renderOrders();
+  renderInventory();
+}
+
+if (sessionStorage.getItem('ff_admin_logged')) {
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('adminWrap').style.display = 'flex';
+  initAdmin();
+}
+
+// Handle Enter on login
+document.getElementById('loginPass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+</script>
+</body>
+</html>
