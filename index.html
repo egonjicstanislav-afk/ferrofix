@@ -5,493 +5,136 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FerroFix — Gvožđara</title>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
-    --steel: #1a1f2e;
-    --steel-mid: #252b3b;
-    --steel-light: #2f3749;
-    --rust: #d4500a;
-    --rust-light: #e8681f;
-    --gold: #f0a500;
-    --smoke: #8a95a8;
-    --fog: #c8d0dc;
-    --white: #f4f6f9;
-    --danger: #c0392b;
+    --steel: #1a1f2e; --steel-mid: #252b3b; --steel-light: #2f3749;
+    --rust: #d4500a; --rust-light: #e8681f; --gold: #f0a500;
+    --smoke: #8a95a8; --fog: #c8d0dc; --white: #f4f6f9; --danger: #c0392b;
   }
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    font-family: 'Source Sans 3', sans-serif;
-    background: var(--steel);
-    color: var(--white);
-    min-height: 100vh;
-  }
-
-  /* HEADER */
-  header {
-    background: var(--steel-mid);
-    border-bottom: 3px solid var(--rust);
-    position: sticky; top: 0; z-index: 100;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  }
-  .header-inner {
-    max-width: 1200px; margin: 0 auto;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 24px; height: 70px;
-  }
-  .logo {
-    display: flex; align-items: center; gap: 12px; text-decoration: none;
-  }
-  .logo-icon {
-    width: 44px; height: 44px;
-    background: var(--rust);
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-  }
-  .logo-text {
-    font-family: 'Oswald', sans-serif;
-    font-size: 26px; font-weight: 700;
-    color: var(--white); letter-spacing: 2px;
-  }
+  body { font-family: 'Source Sans 3', sans-serif; background: var(--steel); color: var(--white); min-height: 100vh; }
+  header { background: var(--steel-mid); border-bottom: 3px solid var(--rust); position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+  .header-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 70px; }
+  .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+  .logo-icon { width: 44px; height: 44px; background: var(--rust); clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .logo-text { font-family: 'Oswald', sans-serif; font-size: 26px; font-weight: 700; color: var(--white); letter-spacing: 2px; }
   .logo-text span { color: var(--rust); }
   .header-right { display: flex; align-items: center; gap: 16px; }
-  .contact-info {
-    font-size: 13px; color: var(--smoke); text-align: right;
-  }
+  .contact-info { font-size: 13px; color: var(--smoke); text-align: right; }
   .contact-info strong { color: var(--gold); font-size: 14px; display: block; }
-
-  .cart-btn {
-    background: var(--rust);
-    border: none; cursor: pointer;
-    color: var(--white); padding: 10px 18px;
-    font-family: 'Oswald', sans-serif; font-size: 15px; font-weight: 600;
-    letter-spacing: 1px;
-    display: flex; align-items: center; gap: 8px;
-    transition: background 0.2s;
-    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
-  }
+  .cart-btn { background: var(--rust); border: none; cursor: pointer; color: var(--white); padding: 10px 18px; font-family: 'Oswald', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; transition: background 0.2s; clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%); }
   .cart-btn:hover { background: var(--rust-light); }
-  .cart-count {
-    background: var(--gold); color: var(--steel);
-    border-radius: 50%; width: 20px; height: 20px;
-    font-size: 12px; font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
-  }
-
-  /* HERO */
-  .hero {
-    background: linear-gradient(135deg, var(--steel-mid) 0%, #0f1219 100%);
-    padding: 60px 24px;
-    text-align: center;
-    position: relative; overflow: hidden;
-    border-bottom: 1px solid var(--steel-light);
-  }
-  .hero::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: repeating-linear-gradient(
-      45deg, transparent, transparent 40px,
-      rgba(212,80,10,0.03) 40px, rgba(212,80,10,0.03) 80px
-    );
-  }
-  .hero h1 {
-    font-family: 'Oswald', sans-serif;
-    font-size: clamp(32px, 5vw, 56px);
-    font-weight: 700; letter-spacing: 3px;
-    position: relative;
-  }
+  .cart-count { background: var(--gold); color: var(--steel); border-radius: 50%; width: 20px; height: 20px; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .hero { background: linear-gradient(135deg, var(--steel-mid) 0%, #0f1219 100%); padding: 60px 24px; text-align: center; position: relative; overflow: hidden; border-bottom: 1px solid var(--steel-light); }
+  .hero::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(212,80,10,0.03) 40px, rgba(212,80,10,0.03) 80px); }
+  .hero h1 { font-family: 'Oswald', sans-serif; font-size: clamp(32px, 5vw, 56px); font-weight: 700; letter-spacing: 3px; position: relative; }
   .hero h1 em { color: var(--rust); font-style: normal; }
-  .hero p {
-    color: var(--smoke); font-size: 17px; margin-top: 12px;
-    position: relative;
-  }
-  .villages-bar {
-    margin-top: 24px;
-    display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
-    position: relative;
-  }
-  .village-tag {
-    background: var(--steel-light);
-    border: 1px solid var(--rust);
-    color: var(--fog);
-    padding: 5px 14px; font-size: 13px;
-    font-family: 'Oswald', sans-serif; letter-spacing: 1px;
-  }
-
-  /* MAIN LAYOUT */
-  .main {
-    max-width: 1200px; margin: 0 auto; padding: 32px 24px;
-  }
-
-  /* CATEGORIES */
-  .section-title {
-    font-family: 'Oswald', sans-serif;
-    font-size: 22px; font-weight: 600;
-    letter-spacing: 2px; color: var(--fog);
-    border-left: 4px solid var(--rust);
-    padding-left: 14px; margin-bottom: 20px;
-    text-transform: uppercase;
-  }
-
-  .category-tabs {
-    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px;
-  }
-  .cat-tab {
-    background: var(--steel-mid);
-    border: 1px solid var(--steel-light);
-    color: var(--smoke); padding: 8px 18px;
-    cursor: pointer; font-family: 'Oswald', sans-serif;
-    font-size: 14px; letter-spacing: 1px;
-    transition: all 0.2s;
-  }
-  .cat-tab:hover, .cat-tab.active {
-    background: var(--rust); border-color: var(--rust);
-    color: var(--white);
-  }
-
-  /* SEARCH */
-  .search-bar {
-    width: 100%; background: var(--steel-mid);
-    border: 1px solid var(--steel-light); border-left: 3px solid var(--rust);
-    color: var(--white); padding: 12px 16px;
-    font-family: 'Source Sans 3', sans-serif; font-size: 15px;
-    outline: none; margin-bottom: 24px;
-    transition: border-color 0.2s;
-  }
+  .hero p { color: var(--smoke); font-size: 17px; margin-top: 12px; position: relative; }
+  .villages-bar { margin-top: 24px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; position: relative; }
+  .village-tag { background: var(--steel-light); border: 1px solid var(--rust); color: var(--fog); padding: 5px 14px; font-size: 13px; font-family: 'Oswald', sans-serif; letter-spacing: 1px; }
+  .main { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+  .section-title { font-family: 'Oswald', sans-serif; font-size: 22px; font-weight: 600; letter-spacing: 2px; color: var(--fog); border-left: 4px solid var(--rust); padding-left: 14px; margin-bottom: 20px; text-transform: uppercase; }
+  .category-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+  .cat-tab { background: var(--steel-mid); border: 1px solid var(--steel-light); color: var(--smoke); padding: 8px 18px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 14px; letter-spacing: 1px; transition: all 0.2s; }
+  .cat-tab:hover, .cat-tab.active { background: var(--rust); border-color: var(--rust); color: var(--white); }
+  .search-bar { width: 100%; background: var(--steel-mid); border: 1px solid var(--steel-light); border-left: 3px solid var(--rust); color: var(--white); padding: 12px 16px; font-family: 'Source Sans 3', sans-serif; font-size: 15px; outline: none; margin-bottom: 24px; transition: border-color 0.2s; }
   .search-bar:focus { border-color: var(--gold); }
   .search-bar::placeholder { color: var(--smoke); }
-
-  /* PRODUCTS GRID */
-  .products-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 16px;
-  }
-
-  .product-card {
-    background: var(--steel-mid);
-    border: 1px solid var(--steel-light);
-    transition: transform 0.2s, border-color 0.2s;
-    position: relative; overflow: hidden;
-  }
-  .product-card:hover {
-    transform: translateY(-2px);
-    border-color: var(--rust);
-  }
-  .product-card::before {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0;
-    height: 3px; background: var(--rust);
-    transform: scaleX(0); transform-origin: left;
-    transition: transform 0.3s;
-  }
+  .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .product-card { background: var(--steel-mid); border: 1px solid var(--steel-light); transition: transform 0.2s, border-color 0.2s; position: relative; overflow: hidden; }
+  .product-card:hover { transform: translateY(-2px); border-color: var(--rust); }
+  .product-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--rust); transform: scaleX(0); transform-origin: left; transition: transform 0.3s; }
   .product-card:hover::before { transform: scaleX(1); }
-
   .product-body { padding: 18px; }
-  .product-category {
-    font-size: 11px; font-family: 'Oswald', sans-serif;
-    letter-spacing: 2px; color: var(--rust);
-    text-transform: uppercase; margin-bottom: 6px;
-  }
-  .product-name {
-    font-family: 'Oswald', sans-serif;
-    font-size: 17px; font-weight: 600;
-    color: var(--white); line-height: 1.3; margin-bottom: 6px;
-  }
-  .product-desc {
-    font-size: 13px; color: var(--smoke); line-height: 1.5; margin-bottom: 12px;
-  }
-  .product-footer {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 18px;
-    background: rgba(0,0,0,0.2);
-    border-top: 1px solid var(--steel-light);
-  }
-  .product-price {
-    font-family: 'Oswald', sans-serif;
-    font-size: 20px; font-weight: 700; color: var(--gold);
-  }
+  .product-category { font-size: 11px; font-family: 'Oswald', sans-serif; letter-spacing: 2px; color: var(--rust); text-transform: uppercase; margin-bottom: 6px; }
+  .product-name { font-family: 'Oswald', sans-serif; font-size: 17px; font-weight: 600; color: var(--white); line-height: 1.3; margin-bottom: 6px; }
+  .product-desc { font-size: 13px; color: var(--smoke); line-height: 1.5; margin-bottom: 12px; }
+  .product-footer { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: rgba(0,0,0,0.2); border-top: 1px solid var(--steel-light); }
+  .product-price { font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 700; color: var(--gold); }
   .product-price span { font-size: 13px; color: var(--smoke); font-weight: 400; }
   .product-unit { font-size: 12px; color: var(--smoke); }
-
-  .qty-control {
-    display: flex; align-items: center; gap: 8px;
-  }
-  .qty-btn {
-    width: 28px; height: 28px;
-    background: var(--steel-light); border: 1px solid var(--smoke);
-    color: var(--white); font-size: 16px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.15s; font-family: 'Oswald', sans-serif;
-  }
+  .qty-control { display: flex; align-items: center; gap: 8px; }
+  .qty-btn { width: 28px; height: 28px; background: var(--steel-light); border: 1px solid var(--smoke); color: var(--white); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; font-family: 'Oswald', sans-serif; }
   .qty-btn:hover { background: var(--rust); border-color: var(--rust); }
-  .qty-input {
-    width: 44px; text-align: center;
-    background: var(--steel-light); border: 1px solid var(--smoke);
-    color: var(--white); font-size: 14px; padding: 4px 0;
-    font-family: 'Oswald', sans-serif;
-  }
-  .qty-input::-webkit-outer-spin-button,
-  .qty-input::-webkit-inner-spin-button { -webkit-appearance: none; }
-
-  .add-btn {
-    background: var(--rust); border: none; color: var(--white);
-    padding: 8px 16px; cursor: pointer;
-    font-family: 'Oswald', sans-serif; font-size: 13px;
-    letter-spacing: 1px; transition: background 0.2s;
-  }
+  .qty-input { width: 44px; text-align: center; background: var(--steel-light); border: 1px solid var(--smoke); color: var(--white); font-size: 14px; padding: 4px 0; font-family: 'Oswald', sans-serif; }
+  .qty-input::-webkit-outer-spin-button, .qty-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .add-btn { background: var(--rust); border: none; color: var(--white); padding: 8px 16px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 13px; letter-spacing: 1px; transition: background 0.2s; }
   .add-btn:hover { background: var(--rust-light); }
   .add-btn.added { background: #2a7a2a; }
-
-  .out-of-stock {
-    font-family: 'Oswald', sans-serif; font-size: 13px;
-    color: var(--danger); letter-spacing: 1px;
-  }
-
-  .no-products {
-    grid-column: 1 / -1;
-    text-align: center; padding: 60px;
-    color: var(--smoke); font-size: 16px;
-  }
-
-  /* CART DRAWER */
-  .cart-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.6);
-    z-index: 200; opacity: 0; pointer-events: none;
-    transition: opacity 0.3s;
-  }
+  .out-of-stock { font-family: 'Oswald', sans-serif; font-size: 13px; color: var(--danger); letter-spacing: 1px; }
+  .no-products { grid-column: 1 / -1; text-align: center; padding: 60px; color: var(--smoke); font-size: 16px; }
+  .loading { grid-column: 1/-1; text-align: center; padding: 60px; color: var(--smoke); }
+  .spinner { width: 36px; height: 36px; border: 3px solid var(--steel-light); border-top-color: var(--rust); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .cart-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
   .cart-overlay.open { opacity: 1; pointer-events: all; }
-
-  .cart-drawer {
-    position: fixed; top: 0; right: 0; bottom: 0;
-    width: 420px; max-width: 100vw;
-    background: var(--steel-mid);
-    border-left: 2px solid var(--rust);
-    z-index: 201;
-    transform: translateX(100%); transition: transform 0.3s;
-    display: flex; flex-direction: column;
-  }
+  .cart-drawer { position: fixed; top: 0; right: 0; bottom: 0; width: 420px; max-width: 100vw; background: var(--steel-mid); border-left: 2px solid var(--rust); z-index: 201; transform: translateX(100%); transition: transform 0.3s; display: flex; flex-direction: column; }
   .cart-drawer.open { transform: translateX(0); }
-
-  .cart-header {
-    padding: 20px 24px;
-    border-bottom: 2px solid var(--steel-light);
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .cart-header h2 {
-    font-family: 'Oswald', sans-serif;
-    font-size: 20px; letter-spacing: 2px;
-  }
-  .close-btn {
-    background: none; border: none; color: var(--smoke);
-    font-size: 24px; cursor: pointer; line-height: 1;
-    transition: color 0.2s;
-  }
+  .cart-header { padding: 20px 24px; border-bottom: 2px solid var(--steel-light); display: flex; align-items: center; justify-content: space-between; }
+  .cart-header h2 { font-family: 'Oswald', sans-serif; font-size: 20px; letter-spacing: 2px; }
+  .close-btn { background: none; border: none; color: var(--smoke); font-size: 24px; cursor: pointer; line-height: 1; transition: color 0.2s; }
   .close-btn:hover { color: var(--white); }
-
-  .cart-items {
-    flex: 1; overflow-y: auto; padding: 16px 24px;
-    display: flex; flex-direction: column;
-  }
-  .cart-item {
-    display: flex; align-items: center; gap: 12px;
-    padding: 12px 0; border-bottom: 1px solid var(--steel-light);
-  }
+  .cart-items { flex: 1; overflow-y: auto; padding: 16px 24px; display: flex; flex-direction: column; }
+  .cart-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--steel-light); }
   .cart-item-info { flex: 1; }
-  .cart-item-name {
-    font-family: 'Oswald', sans-serif; font-size: 15px;
-  }
+  .cart-item-name { font-family: 'Oswald', sans-serif; font-size: 15px; }
   .cart-item-sub { font-size: 12px; color: var(--smoke); }
-  .cart-item-price {
-    font-family: 'Oswald', sans-serif; color: var(--gold); font-size: 16px;
-  }
-  .cart-item-remove {
-    background: none; border: none; color: var(--smoke);
-    cursor: pointer; font-size: 18px; transition: color 0.2s;
-  }
+  .cart-item-price { font-family: 'Oswald', sans-serif; color: var(--gold); font-size: 16px; }
+  .cart-item-remove { background: none; border: none; color: var(--smoke); cursor: pointer; font-size: 18px; transition: color 0.2s; }
   .cart-item-remove:hover { color: var(--danger); }
-
-  .cart-empty {
-    text-align: center; padding: 48px 24px;
-    color: var(--smoke); font-size: 15px;
-  }
+  .cart-empty { text-align: center; padding: 48px 24px; color: var(--smoke); font-size: 15px; }
   .cart-empty .icon { font-size: 48px; margin-bottom: 12px; }
-
   .cart-footer { padding: 20px 24px; border-top: 2px solid var(--steel-light); }
-  .cart-total {
-    display: flex; justify-content: space-between;
-    font-family: 'Oswald', sans-serif;
-    font-size: 20px; margin-bottom: 16px;
-  }
+  .cart-total { display: flex; justify-content: space-between; font-family: 'Oswald', sans-serif; font-size: 20px; margin-bottom: 16px; }
   .cart-total span:last-child { color: var(--gold); }
-
-  /* CHECKOUT FORM */
-  .checkout-section {
-    border-top: 2px solid var(--steel-light); padding-top: 20px;
-  }
-  .checkout-section h3 {
-    font-family: 'Oswald', sans-serif;
-    font-size: 16px; letter-spacing: 2px;
-    color: var(--fog); margin-bottom: 14px;
-  }
+  .delivery-notice { display: flex; align-items: center; gap: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 13px; font-family: 'Oswald', sans-serif; letter-spacing: 1px; border: 1px solid; }
+  .delivery-notice.free { background: rgba(39,174,96,0.1); border-color: #27ae60; color: #58d68d; }
+  .delivery-notice.tbd { background: rgba(243,156,18,0.1); border-color: #f39c12; color: #f8c471; }
+  .checkout-section { border-top: 2px solid var(--steel-light); padding-top: 20px; }
+  .checkout-section h3 { font-family: 'Oswald', sans-serif; font-size: 16px; letter-spacing: 2px; color: var(--fog); margin-bottom: 14px; }
   .form-group { margin-bottom: 12px; }
-  .form-group label {
-    display: block; font-size: 12px;
-    font-family: 'Oswald', sans-serif;
-    letter-spacing: 1px; color: var(--smoke);
-    margin-bottom: 5px; text-transform: uppercase;
-  }
-  .form-control {
-    width: 100%; background: var(--steel);
-    border: 1px solid var(--steel-light); border-left: 3px solid var(--rust);
-    color: var(--white); padding: 10px 12px;
-    font-family: 'Source Sans 3', sans-serif; font-size: 14px;
-    outline: none; transition: border-color 0.2s;
-  }
+  .form-group label { display: block; font-size: 12px; font-family: 'Oswald', sans-serif; letter-spacing: 1px; color: var(--smoke); margin-bottom: 5px; text-transform: uppercase; }
+  .form-control { width: 100%; background: var(--steel); border: 1px solid var(--steel-light); border-left: 3px solid var(--rust); color: var(--white); padding: 10px 12px; font-family: 'Source Sans 3', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s; }
   .form-control:focus { border-color: var(--gold); }
   .form-control::placeholder { color: var(--smoke); }
   select.form-control option { background: var(--steel-mid); }
-
-  .slot-options {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-  }
-  .slot-opt {
-    background: var(--steel);
-    border: 1px solid var(--steel-light);
-    color: var(--smoke); padding: 10px;
-    text-align: center; cursor: pointer;
-    font-family: 'Oswald', sans-serif; font-size: 13px;
-    letter-spacing: 1px; transition: all 0.2s;
-  }
-  .slot-opt.selected {
-    background: var(--rust); border-color: var(--rust); color: var(--white);
-  }
-
-  .order-btn {
-    width: 100%; background: var(--rust);
-    border: none; color: var(--white); padding: 16px;
-    font-family: 'Oswald', sans-serif; font-size: 18px;
-    font-weight: 700; letter-spacing: 3px; cursor: pointer;
-    transition: background 0.2s; margin-top: 16px;
-    clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
-  }
+  .slot-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .slot-opt { background: var(--steel); border: 1px solid var(--steel-light); color: var(--smoke); padding: 10px; text-align: center; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 13px; letter-spacing: 1px; transition: all 0.2s; }
+  .slot-opt.selected { background: var(--rust); border-color: var(--rust); color: var(--white); }
+  .order-btn { width: 100%; background: var(--rust); border: none; color: var(--white); padding: 16px; font-family: 'Oswald', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: 3px; cursor: pointer; transition: background 0.2s; margin-top: 16px; clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%); }
   .order-btn:hover { background: var(--rust-light); }
   .order-btn:disabled { background: var(--steel-light); color: var(--smoke); cursor: not-allowed; }
-
-  .payment-note {
-    font-size: 12px; color: var(--smoke); text-align: center;
-    margin-top: 10px;
-  }
-  .delivery-notice {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 14px; margin-bottom: 12px;
-    font-size: 13px; font-family: 'Oswald', sans-serif;
-    letter-spacing: 1px; border: 1px solid;
-  }
-  .delivery-notice.free {
-    background: rgba(39,174,96,0.1); border-color: #27ae60; color: #58d68d;
-  }
-  .delivery-notice.tbd {
-    background: rgba(243,156,18,0.1); border-color: #f39c12; color: #f8c471;
-  }
-
-  /* SUCCESS MODAL */
-  .modal-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.75);
-    z-index: 300; display: flex;
-    align-items: center; justify-content: center;
-    opacity: 0; pointer-events: none; transition: opacity 0.3s;
-  }
+  .payment-note { font-size: 12px; color: var(--smoke); text-align: center; margin-top: 10px; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 300; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
   .modal-overlay.open { opacity: 1; pointer-events: all; }
-  .modal {
-    background: var(--steel-mid);
-    border: 2px solid var(--rust);
-    padding: 48px 40px; max-width: 440px; width: 90%;
-    text-align: center;
-    animation: slideUp 0.3s ease;
-  }
-  @keyframes slideUp {
-    from { transform: translateY(30px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
+  .modal { background: var(--steel-mid); border: 2px solid var(--rust); padding: 48px 40px; max-width: 440px; width: 90%; text-align: center; animation: slideUp 0.3s ease; }
+  @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   .modal-icon { font-size: 56px; margin-bottom: 16px; }
-  .modal h2 {
-    font-family: 'Oswald', sans-serif; font-size: 28px;
-    color: var(--gold); letter-spacing: 2px; margin-bottom: 12px;
-  }
+  .modal h2 { font-family: 'Oswald', sans-serif; font-size: 28px; color: var(--gold); letter-spacing: 2px; margin-bottom: 12px; }
   .modal p { color: var(--fog); font-size: 15px; line-height: 1.6; }
-  .modal-order-id {
-    background: var(--steel); border: 1px dashed var(--rust);
-    padding: 12px; margin: 16px 0;
-    font-family: 'Oswald', sans-serif; font-size: 18px;
-    color: var(--gold); letter-spacing: 3px;
-  }
-  .modal-close {
-    margin-top: 20px; background: var(--rust); border: none;
-    color: var(--white); padding: 12px 32px;
-    font-family: 'Oswald', sans-serif; font-size: 16px;
-    letter-spacing: 2px; cursor: pointer;
-    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
-  }
+  .modal-order-id { background: var(--steel); border: 1px dashed var(--rust); padding: 12px; margin: 16px 0; font-family: 'Oswald', sans-serif; font-size: 18px; color: var(--gold); letter-spacing: 3px; }
+  .modal-close { margin-top: 20px; background: var(--rust); border: none; color: var(--white); padding: 12px 32px; font-family: 'Oswald', sans-serif; font-size: 16px; letter-spacing: 2px; cursor: pointer; clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%); }
   .modal-close:hover { background: var(--rust-light); }
-
-  /* FOOTER */
-  footer {
-    background: #0f1219;
-    border-top: 2px solid var(--steel-light);
-    padding: 32px 24px;
-    text-align: center;
-  }
-  footer .footer-logo {
-    font-family: 'Oswald', sans-serif; font-size: 20px;
-    font-weight: 700; letter-spacing: 3px;
-    color: var(--fog); margin-bottom: 8px;
-  }
+  footer { background: #0f1219; border-top: 2px solid var(--steel-light); padding: 32px 24px; text-align: center; }
+  footer .footer-logo { font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: 3px; color: var(--fog); margin-bottom: 8px; }
   footer .footer-logo span { color: var(--rust); }
   footer p { color: var(--smoke); font-size: 13px; line-height: 1.8; }
   footer a { color: var(--gold); text-decoration: none; }
-  .admin-link {
-    display: inline-block; margin-top: 20px;
-    font-family: 'Oswald', sans-serif; font-size: 12px;
-    letter-spacing: 2px; color: var(--steel-light);
-    text-decoration: none; transition: color 0.2s;
-  }
+  .admin-link { display: inline-block; margin-top: 20px; font-family: 'Oswald', sans-serif; font-size: 12px; letter-spacing: 2px; color: var(--steel-light); text-decoration: none; transition: color 0.2s; }
   .admin-link:hover { color: var(--smoke); }
-
-  /* SCROLLBAR */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: var(--steel); }
-  ::-webkit-scrollbar-thumb { background: var(--rust); }
-
-  @media (max-width: 600px) {
-    .header-inner { padding: 0 16px; }
-    .contact-info { display: none; }
-    .cart-drawer { width: 100vw; }
-    .main { padding: 20px 16px; }
-  }
+  ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: var(--steel); } ::-webkit-scrollbar-thumb { background: var(--rust); }
+  @media (max-width: 600px) { .header-inner { padding: 0 16px; } .contact-info { display: none; } .cart-drawer { width: 100vw; } .main { padding: 20px 16px; } }
 </style>
 </head>
 <body>
 
 <header>
   <div class="header-inner">
-    <a class="logo" href="#">
-      <div class="logo-icon">🔧</div>
-      <div class="logo-text">Ferro<span>Fix</span></div>
-    </a>
+    <a class="logo" href="#"><div class="logo-icon">🔧</div><div class="logo-text">Ferro<span>Fix</span></div></a>
     <div class="header-right">
-      <div class="contact-info">
-        Miloš Nikolić<br>
-        <strong><a href="tel:+38163473378" style="color:var(--gold);text-decoration:none">+381 63 473 378</a></strong>
-      </div>
-      <button class="cart-btn" onclick="toggleCart()">
-        🛒 Korpa
-        <span class="cart-count" id="cartCount">0</span>
-      </button>
+      <div class="contact-info">Miloš Nikolić<br><strong><a href="tel:+38163473378" style="color:var(--gold);text-decoration:none">+381 63 473 378</a></strong></div>
+      <button class="cart-btn" onclick="toggleCart()">🛒 Korpa <span class="cart-count" id="cartCount">0</span></button>
     </div>
   </div>
 </header>
@@ -500,24 +143,315 @@
   <h1>Materijal na kućni <em>prag</em></h1>
   <p>Naručite online — dostavljamo u sva obližnja mesta</p>
   <div class="villages-bar">
-    <span class="village-tag">Mali Požarevac</span>
-    <span class="village-tag">Mala Ivanča</span>
-    <span class="village-tag">Mali Popović</span>
-    <span class="village-tag">Senaja</span>
-    <span class="village-tag">Šepšin</span>
-    <span class="village-tag">Đurinci</span>
+    <span class="village-tag">Mali Požarevac</span><span class="village-tag">Mala Ivanča</span>
+    <span class="village-tag">Mali Popović</span><span class="village-tag">Senaja</span>
+    <span class="village-tag">Šepšin</span><span class="village-tag">Đurinci</span>
   </div>
 </section>
 
 <main class="main">
   <h2 class="section-title">Naš asortiman</h2>
-
-  <input type="text" class="search-bar" id="searchInput"
-    placeholder="🔍 Pretraži artikle (npr. čekić, boja, šrafovi...)"
-    oninput="renderProducts()">
-
+  <input type="text" class="search-bar" id="searchInput" placeholder="🔍 Pretraži artikle (npr. cekic, boja, srafovi...)" oninput="renderProducts()">
   <div class="category-tabs" id="catTabs"></div>
-
-  <div class="products-grid" id="productsGrid"></div>
+  <div class="products-grid" id="productsGrid"><div class="loading"><div class="spinner"></div>Učitavanje artikala...</div></div>
 </main>
 
+<div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-header">
+    <h2>🛒 KORPA</h2>
+    <div style="display:flex;align-items:center;gap:12px">
+      <button id="clearCartBtn" onclick="clearCart()" style="background:none;border:1px solid var(--danger);color:var(--danger);padding:5px 12px;cursor:pointer;font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:1px;display:none;transition:all 0.2s" onmouseover="this.style.background='rgba(192,57,43,0.2)'" onmouseout="this.style.background='none'">🗑 ISPRAZNI</button>
+      <button class="close-btn" onclick="toggleCart()">✕</button>
+    </div>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-footer">
+    <div class="cart-total"><span>UKUPNO:</span><span id="cartTotal">0 RSD</span></div>
+    <div id="deliveryNotice" style="display:none"></div>
+    <button class="order-btn" id="proceedBtn" onclick="showCheckout()" style="display:none">NASTAVAK →</button>
+    <button class="order-btn" id="orderBtn" onclick="placeOrder()" style="display:none">NARUČI →</button>
+    <p class="payment-note" id="paymentNote" style="display:none">💶 Plaćanje pouzećem pri dostavi</p>
+  </div>
+</div>
+
+<div class="modal-overlay" id="successModal">
+  <div class="modal">
+    <div class="modal-icon">✅</div>
+    <h2>NARUDŽBINA PRIMLJENA</h2>
+    <p>Hvala! Vaša narudžbina je uspešno zabeležena.</p>
+    <div class="modal-order-id" id="modalOrderId"></div>
+    <p>Miloš će Vas kontaktirati radi potvrde. Plaćanje pri dostavi.</p>
+    <button class="modal-close" onclick="closeModal()">ZATVORI</button>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo">Ferro<span>Fix</span> Gvožđara</div>
+  <p>Miloš Nikolić · <a href="tel:+38163473378">+381 63 473 378</a><br>
+  Dostava: Mali Požarevac · Mala Ivanča · Mali Popović · Senaja · Šepšin · Đurinci</p>
+  <a class="admin-link" href="admin.html">⚙ admin</a>
+</footer>
+
+<script>
+const SUPABASE_URL = 'https://ufzutvlexliliinkgkln.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmenV0dmxleGxpbGlpbmtna2xuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNzA1NzAsImV4cCI6MjA4Nzk0NjU3MH0.rI0Rk6TN9Hl0gRdp3MUYotJjwLcTbhZ1ekwJYRdKoa4';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const CATEGORIES = ['Alat','Vijci i ekseri','Boje i lakovi','Građevinski materijal','Vodoinstalacije','Elektro materijal'];
+let cachedProducts = [];
+let cachedSlots = [];
+
+async function fetchProducts() {
+  const { data, error } = await db.from('products').select('*').order('name');
+  if (error) { console.error(error); return; }
+  cachedProducts = data;
+}
+
+async function fetchSlots() {
+  const { data, error } = await db.from('slots').select('*').eq('active', true);
+  if (error) { console.error(error); return; }
+  cachedSlots = data;
+}
+
+// CART — ostaje lokalno
+let cart = JSON.parse(localStorage.getItem('ff_cart') || '[]');
+function saveCart() { localStorage.setItem('ff_cart', JSON.stringify(cart)); }
+
+function clearCart() {
+  if (!confirm('Isprazni korpu?')) return;
+  cart = []; saveCart(); updateCartUI();
+}
+
+function addToCart(productId, qty) {
+  const product = cachedProducts.find(p => p.id === productId);
+  if (!product) return;
+  const existing = cart.find(i => i.id === productId);
+  if (existing) { existing.qty = Math.min(existing.qty + qty, product.stock); }
+  else { cart.push({ id: productId, name: product.name, price: Number(product.price), unit: product.unit, qty, stock: product.stock, category: product.category }); }
+  saveCart(); updateCartUI();
+}
+
+function removeFromCart(productId) {
+  cart = cart.filter(i => i.id !== productId);
+  saveCart(); updateCartUI();
+}
+
+function cartTotal() { return cart.reduce((s, i) => s + i.price * i.qty, 0); }
+
+function updateCartUI() {
+  const count = cart.reduce((s, i) => s + i.qty, 0);
+  document.getElementById('cartCount').textContent = count;
+  const itemsEl = document.getElementById('cartItems');
+  const clearBtn = document.getElementById('clearCartBtn');
+
+  if (cart.length === 0) {
+    itemsEl.innerHTML = `<div class="cart-empty"><div class="icon">🛒</div>Korpa je prazna</div>`;
+    ['proceedBtn','orderBtn','paymentNote'].forEach(id => document.getElementById(id).style.display = 'none');
+    document.getElementById('cartTotal').textContent = '0 RSD';
+    document.getElementById('deliveryNotice').style.display = 'none';
+    clearBtn.style.display = 'none';
+    return;
+  }
+  clearBtn.style.display = 'block';
+
+  const checkoutHtml = `
+    <div class="checkout-section" id="checkoutSection" style="display:none;margin-top:16px">
+      <h3>PODACI ZA DOSTAVU</h3>
+      <div class="form-group"><label>Vaše ime i prezime</label><input type="text" class="form-control" id="custName" placeholder="npr. Petar Petrović"></div>
+      <div class="form-group"><label>Telefon</label><input type="tel" class="form-control" id="custPhone" placeholder="+381 6x xxx xxx"></div>
+      <div class="form-group"><label>Adresa (ulica i broj)</label><input type="text" class="form-control" id="custAddress" placeholder="npr. Glavna 12"></div>
+      <div class="form-group"><label>Mesto</label>
+        <select class="form-control" id="custVillage">
+          <option value="">— Izaberite mesto —</option>
+          <option>Mali Požarevac</option><option>Mala Ivanča</option>
+          <option>Mali Popović</option><option>Senaja</option>
+          <option>Šepšin</option><option>Đurinci</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Datum dostave</label><input type="date" class="form-control" id="custDate"></div>
+      <div class="form-group"><label>Termin dostave</label><div class="slot-options" id="slotOptions"></div></div>
+      <div class="form-group"><label>Napomena (opciono)</label><input type="text" class="form-control" id="custNote" placeholder="npr. Zvati pre dolaska"></div>
+    </div>`;
+
+  itemsEl.innerHTML = cart.map(item => `
+    <div class="cart-item">
+      <div class="cart-item-info">
+        <div class="cart-item-name">${item.name}</div>
+        <div class="cart-item-sub">${item.qty} ${item.unit} × ${item.price.toLocaleString('sr')} RSD</div>
+      </div>
+      <div class="cart-item-price">${(item.qty * item.price).toLocaleString('sr')} RSD</div>
+      <button class="cart-item-remove" onclick="removeFromCart('${item.id}')">✕</button>
+    </div>`).join('') + checkoutHtml;
+
+  document.getElementById('cartTotal').textContent = cartTotal().toLocaleString('sr') + ' RSD';
+
+  const noticeEl = document.getElementById('deliveryNotice');
+  const total = cartTotal();
+  noticeEl.style.display = 'block';
+  if (total >= 3000) {
+    noticeEl.innerHTML = `<div class="delivery-notice free">✅ BESPLATNA DOSTAVA</div>`;
+  } else {
+    noticeEl.innerHTML = `<div class="delivery-notice tbd">⚠ Još <strong style="color:var(--gold);margin:0 4px">${(3000 - total).toLocaleString('sr')} RSD</strong> do besplatne dostave · Cena dostave na upit</div>`;
+  }
+
+  document.getElementById('proceedBtn').style.display = 'block';
+  document.getElementById('orderBtn').style.display = 'none';
+  document.getElementById('paymentNote').style.display = 'none';
+}
+
+function normalize(str) {
+  return str.toLowerCase()
+    .replace(/[čć]/g,'c').replace(/[š]/g,'s').replace(/[ž]/g,'z')
+    .replace(/[đ]/g,'d').replace(/[á]/g,'a').replace(/[é]/g,'e')
+    .replace(/[í]/g,'i').replace(/[ó]/g,'o').replace(/[ú]/g,'u');
+}
+
+let activeCategory = 'Sve';
+
+function renderCategories() {
+  document.getElementById('catTabs').innerHTML = ['Sve', ...CATEGORIES].map(c =>
+    `<button class="cat-tab ${c === activeCategory ? 'active' : ''}" onclick="setCategory('${c}')">${c}</button>`
+  ).join('');
+}
+
+function setCategory(cat) { activeCategory = cat; renderCategories(); renderProducts(); }
+
+function renderProducts() {
+  const search = document.getElementById('searchInput').value;
+  const nSearch = normalize(search);
+  let products = [...cachedProducts];
+  if (activeCategory !== 'Sve') products = products.filter(p => p.category === activeCategory);
+  if (search) products = products.filter(p =>
+    normalize(p.name).includes(nSearch) ||
+    normalize(p.category || '').includes(nSearch) ||
+    normalize(p.description || '').includes(nSearch)
+  );
+
+  const grid = document.getElementById('productsGrid');
+  if (products.length === 0) { grid.innerHTML = `<div class="no-products">Nema artikala koji odgovaraju pretrazi.</div>`; return; }
+
+  grid.innerHTML = products.map(p => `
+    <div class="product-card">
+      <div class="product-body">
+        <div class="product-category">${p.category}</div>
+        <div class="product-name">${p.name}</div>
+        <div class="product-desc">${p.description || ''}</div>
+      </div>
+      <div class="product-footer">
+        <div>
+          <div class="product-price">${Number(p.price).toLocaleString('sr')} <span>RSD/${p.unit}</span></div>
+          <div class="product-unit">Na stanju: ${p.stock} ${p.unit}</div>
+        </div>
+        ${p.stock > 0 ? `
+          <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+            <div class="qty-control">
+              <button class="qty-btn" onclick="changeQty('${p.id}',-1)">−</button>
+              <input class="qty-input" type="number" id="qty_${p.id}" value="1" min="1" max="${p.stock}">
+              <button class="qty-btn" onclick="changeQty('${p.id}',1)">+</button>
+            </div>
+            <button class="add-btn" id="add_${p.id}" onclick="addFromGrid('${p.id}')">+ U korpu</button>
+          </div>` : `<span class="out-of-stock">NEMA NA STANJU</span>`}
+      </div>
+    </div>`).join('');
+}
+
+function changeQty(productId, delta) {
+  const input = document.getElementById('qty_' + productId);
+  const p = cachedProducts.find(x => x.id === productId);
+  let v = parseInt(input.value) + delta;
+  if (v < 1) v = 1; if (v > p.stock) v = p.stock;
+  input.value = v;
+}
+
+function addFromGrid(productId) {
+  const qty = parseInt(document.getElementById('qty_' + productId).value) || 1;
+  addToCart(productId, qty);
+  const btn = document.getElementById('add_' + productId);
+  btn.textContent = '✓ Dodato'; btn.classList.add('added');
+  setTimeout(() => { btn.textContent = '+ U korpu'; btn.classList.remove('added'); }, 1500);
+}
+
+function toggleCart() {
+  document.getElementById('cartDrawer').classList.toggle('open');
+  document.getElementById('cartOverlay').classList.toggle('open');
+}
+
+function showCheckout() {
+  document.getElementById('proceedBtn').style.display = 'none';
+  document.getElementById('orderBtn').style.display = 'block';
+  document.getElementById('paymentNote').style.display = 'block';
+  const sec = document.getElementById('checkoutSection');
+  sec.style.display = 'block';
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  document.getElementById('custDate').min = tomorrow.toISOString().split('T')[0];
+  document.getElementById('custDate').value = tomorrow.toISOString().split('T')[0];
+  renderSlots();
+  setTimeout(() => sec.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+}
+
+let selectedSlot = null;
+function renderSlots() {
+  const el = document.getElementById('slotOptions');
+  if (!el) return;
+  el.innerHTML = cachedSlots.map(s => `
+    <div class="slot-opt ${selectedSlot === s.id ? 'selected' : ''}" onclick="selectSlot('${s.id}')">
+      ${s.label}<br><small style="font-size:11px;font-family:sans-serif;opacity:.8">${s.time}</small>
+    </div>`).join('');
+  if (!selectedSlot && cachedSlots.length) selectSlot(cachedSlots[0].id);
+}
+
+function selectSlot(id) { selectedSlot = id; renderSlots(); }
+
+async function placeOrder() {
+  const name = document.getElementById('custName').value.trim();
+  const phone = document.getElementById('custPhone').value.trim();
+  const address = document.getElementById('custAddress').value.trim();
+  const village = document.getElementById('custVillage').value;
+  const date = document.getElementById('custDate').value;
+  const note = document.getElementById('custNote').value.trim();
+
+  if (!name || !phone || !address || !village || !date || !selectedSlot) {
+    alert('Molimo popunite sva obavezna polja.'); return;
+  }
+
+  const btn = document.getElementById('orderBtn');
+  btn.disabled = true; btn.textContent = '⏳ Šalje se...';
+
+  const orderId = 'FF-' + Date.now().toString(36).toUpperCase();
+  const slot = cachedSlots.find(s => s.id === selectedSlot);
+
+  const order = {
+    id: orderId,
+    customer: { name, phone, address, village, note },
+    delivery: { date, slotId: selectedSlot, slotLabel: slot ? slot.label + ' ' + slot.time : selectedSlot },
+    items: [...cart],
+    total: cartTotal(),
+    status: 'nova'
+  };
+
+  const { error } = await db.from('orders').insert([order]);
+  if (error) {
+    console.error(error);
+    alert('Greška pri slanju narudžbine. Pokušajte ponovo ili nas pozovite na +381 63 473 378.');
+    btn.disabled = false; btn.textContent = 'NARUČI →'; return;
+  }
+
+  cart = []; saveCart(); updateCartUI();
+  toggleCart();
+  document.getElementById('modalOrderId').textContent = orderId;
+  document.getElementById('successModal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('successModal').classList.remove('open'); }
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await Promise.all([fetchProducts(), fetchSlots()]);
+  renderCategories();
+  renderProducts();
+  updateCartUI();
+});
+</script>
+</body>
+</html>
