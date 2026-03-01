@@ -385,6 +385,18 @@
     font-size: 12px; color: var(--smoke); text-align: center;
     margin-top: 10px;
   }
+  .delivery-notice {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px; margin-bottom: 12px;
+    font-size: 13px; font-family: 'Oswald', sans-serif;
+    letter-spacing: 1px; border: 1px solid;
+  }
+  .delivery-notice.free {
+    background: rgba(39,174,96,0.1); border-color: #27ae60; color: #58d68d;
+  }
+  .delivery-notice.tbd {
+    background: rgba(243,156,18,0.1); border-color: #f39c12; color: #f8c471;
+  }
 
   /* SUCCESS MODAL */
   .modal-overlay {
@@ -532,6 +544,7 @@
       <span>UKUPNO:</span>
       <span id="cartTotal">0 RSD</span>
     </div>
+    <div id="deliveryNotice" style="display:none"></div>
     <button class="order-btn" id="proceedBtn" onclick="showCheckout()" style="display:none">
       NASTAVAK →
     </button>
@@ -659,6 +672,7 @@ function updateCartUI() {
     document.getElementById('paymentNote').style.display = 'none';
     document.getElementById('cartTotal').textContent = '0 RSD';
     clearBtn.style.display = 'none';
+    document.getElementById('deliveryNotice').style.display = 'none';
     return;
   }
   clearBtn.style.display = 'block';
@@ -718,6 +732,17 @@ function updateCartUI() {
 
   document.getElementById('cartTotal').textContent =
     cartTotal().toLocaleString('sr') + ' RSD';
+
+  // Dostava
+  const noticeEl = document.getElementById('deliveryNotice');
+  const total = cartTotal();
+  noticeEl.style.display = 'block';
+  if (total >= 3000) {
+    noticeEl.innerHTML = `<div class="delivery-notice free">✅ BESPLATNA DOSTAVA</div>`;
+  } else {
+    const remaining = (3000 - total).toLocaleString('sr');
+    noticeEl.innerHTML = `<div class="delivery-notice tbd">⚠ Još <strong style="color:var(--gold);margin:0 4px">${remaining} RSD</strong> do besplatne dostave · Cena dostave na upit</div>`;
+  }
 
   document.getElementById('proceedBtn').style.display = 'block';
   document.getElementById('orderBtn').style.display = 'none';
