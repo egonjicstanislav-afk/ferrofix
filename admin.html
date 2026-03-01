@@ -333,6 +333,59 @@
   }
   .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
 
+  /* RASPORED */
+  .day-block {
+    margin-bottom: 28px;
+  }
+  .day-header {
+    background: var(--steel);
+    border-left: 4px solid var(--rust);
+    padding: 12px 20px;
+    font-family: 'Oswald', sans-serif;
+    font-size: 18px; letter-spacing: 2px; color: var(--fog);
+    margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .day-header span { font-size: 13px; color: var(--smoke); font-family: 'Source Sans 3', sans-serif; letter-spacing: 0; }
+  .slot-block {
+    margin-bottom: 16px; margin-left: 16px;
+    border-left: 2px solid var(--steel-light);
+    padding-left: 16px;
+  }
+  .slot-header {
+    font-family: 'Oswald', sans-serif; font-size: 14px;
+    letter-spacing: 2px; color: var(--gold);
+    margin-bottom: 10px; padding: 6px 0;
+    border-bottom: 1px solid var(--steel-light);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .slot-header span { font-size: 12px; color: var(--smoke); font-family: 'Source Sans 3', sans-serif; letter-spacing: 0; }
+  .raspored-order {
+    background: var(--steel-mid); border: 1px solid var(--steel-light);
+    padding: 14px 18px; margin-bottom: 8px;
+    display: flex; gap: 16px; align-items: flex-start;
+    flex-wrap: wrap; transition: border-color 0.2s;
+  }
+  .raspored-order:hover { border-color: var(--rust); }
+  .ro-id {
+    font-family: 'Oswald', sans-serif; color: var(--gold);
+    font-size: 13px; letter-spacing: 1px; white-space: nowrap;
+  }
+  .ro-customer { flex: 1; min-width: 150px; }
+  .ro-customer strong { display: block; font-size: 15px; }
+  .ro-customer small { color: var(--smoke); font-size: 13px; }
+  .ro-address { flex: 1; min-width: 140px; font-size: 13px; color: var(--fog); }
+  .ro-items { flex: 2; min-width: 180px; font-size: 13px; color: var(--smoke); }
+  .ro-total {
+    font-family: 'Oswald', sans-serif; font-size: 16px;
+    color: var(--gold); white-space: nowrap;
+  }
+  .ro-status { display: flex; align-items: center; }
+  .raspored-empty {
+    text-align: center; padding: 60px;
+    color: var(--smoke); font-size: 15px;
+  }
+
   /* SCROLLBAR */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: var(--steel); }
@@ -378,6 +431,9 @@
       <a class="nav-item active" onclick="showTab('orders')" href="#">
         📋 <span>Narudžbine</span>
         <span class="nav-badge" id="newOrdersBadge">0</span>
+      </a>
+      <a class="nav-item" onclick="showTab('raspored')" href="#">
+        🗓 <span>Raspored dostave</span>
       </a>
       <a class="nav-item" onclick="showTab('inventory')" href="#">
         📦 <span>Inventar</span>
@@ -432,6 +488,24 @@
           <div>Nema narudžbina</div>
         </div>
       </div>
+    </div>
+
+    <!-- RASPORED TAB -->
+    <div class="tab-section" id="tab-raspored">
+      <div class="content-header">
+        <h1>🗓 RASPORED DOSTAVE</h1>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="rasporedStatusFilter" onchange="renderRaspored()"
+            style="background:var(--steel-mid);border:1px solid var(--steel-light);border-left:2px solid var(--rust);color:var(--white);padding:8px 12px;font-size:13px;outline:none;font-family:'Source Sans 3',sans-serif;">
+            <option value="">Sve osim otkazanih</option>
+            <option value="nova">Samo nove</option>
+            <option value="potvrdjeno">Samo potvrđene</option>
+            <option value="u-dostavi">Samo u dostavi</option>
+            <option value="sve">Sve narudžbine</option>
+          </select>
+        </div>
+      </div>
+      <div class="content-body" id="rasporedBody"></div>
     </div>
 
     <!-- INVENTORY TAB -->
@@ -626,6 +700,7 @@ function showTab(tab) {
   event.currentTarget.classList.add('active');
 
   if (tab === 'orders') renderOrders();
+  if (tab === 'raspored') renderRaspored();
   if (tab === 'inventory') renderInventory();
   if (tab === 'slots') renderSlots();
 }
@@ -743,6 +818,101 @@ function toggleDetail(id) {
   const el = document.getElementById('detail_' + id);
   el.classList.toggle('open');
 }
+
+function renderRaspored() {
+  const filterVal = document.getElementById('rasporedStatusFilter').value;
+  let orders = getOrders();
+
+  // Filter
+  if (!filterVal || filterVal === '') {
+    orders = orders.filter(o => o.status !== 'otkazano' && o.status !== 'isporuceno');
+  } else if (filterVal !== 'sve') {
+    orders = orders.filter(o => o.status === filterVal);
+  }
+
+  const body = document.getElementById('rasporedBody');
+
+  if (orders.length === 0) {
+    body.innerHTML = `<div class="raspored-empty">📭 Nema narudžbina za prikaz</div>`;
+    return;
+  }
+
+  // Grupiši po datumu dostave
+  const byDate = {};
+  orders.forEach(o => {
+    const d = o.delivery.date || 'Bez datuma';
+    if (!byDate[d]) byDate[d] = {};
+    const slot = o.delivery.slotId || 'ostalo';
+    if (!byDate[d][slot]) byDate[d][slot] = { label: o.delivery.slotLabel || slot, orders: [] };
+    byDate[d][slot].orders.push(o);
+  });
+
+  // Sortiraj datume
+  const sortedDates = Object.keys(byDate).sort();
+
+  const DAYS_SR = ['Nedelja','Ponedeljak','Utorak','Sreda','Četvrtak','Petak','Subota'];
+  const MONTHS_SR = ['januar','februar','mart','april','maj','jun','jul','avgust','septembar','oktobar','novembar','decembar'];
+
+  body.innerHTML = sortedDates.map(date => {
+    const dateObj = new Date(date);
+    const dayName = date === 'Bez datuma' ? 'Bez datuma' :
+      `${DAYS_SR[dateObj.getDay()]}, ${dateObj.getDate()}. ${MONTHS_SR[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
+
+    const totalForDay = Object.values(byDate[date])
+      .flatMap(s => s.orders)
+      .reduce((s, o) => s + o.total, 0);
+    const countForDay = Object.values(byDate[date]).flatMap(s => s.orders).length;
+
+    const slotsHtml = Object.entries(byDate[date]).map(([slotId, slotData]) => {
+      const ordersHtml = slotData.orders.map(o => {
+        const itemsStr = o.items.map(i => `${i.name} ×${i.qty}`).join(', ');
+        return `
+          <div class="raspored-order">
+            <div class="ro-id">${o.id}</div>
+            <div class="ro-customer">
+              <strong>${o.customer.name}</strong>
+              <small><a href="tel:${o.customer.phone}" style="color:var(--gold);text-decoration:none">${o.customer.phone}</a></small>
+            </div>
+            <div class="ro-address">📍 ${o.customer.address}<br>${o.customer.mesto || o.customer.village || ''}</div>
+            <div class="ro-items">📦 ${itemsStr}</div>
+            <div class="ro-total">${o.total.toLocaleString('sr')} RSD</div>
+            <div class="ro-status">
+              <select class="status-select" onchange="updateOrderStatus('${o.id}', this.value); renderRaspored();">
+                <option value="nova" ${o.status==='nova'?'selected':''}>🔵 Nova</option>
+                <option value="potvrdjeno" ${o.status==='potvrdjeno'?'selected':''}>✅ Potvrđena</option>
+                <option value="u-dostavi" ${o.status==='u-dostavi'?'selected':''}>🚚 U dostavi</option>
+                <option value="isporuceno" ${o.status==='isporuceno'?'selected':''}>✔ Isporučena</option>
+                <option value="otkazano" ${o.status==='otkazano'?'selected':''}>❌ Otkazana</option>
+              </select>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="slot-block">
+          <div class="slot-header">
+            ${slotData.label}
+            <span>${slotData.orders.length} narudžbin${slotData.orders.length === 1 ? 'a' : 'e'}</span>
+          </div>
+          ${ordersHtml}
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="day-block">
+        <div class="day-header">
+          📅 ${dayName}
+          <span>${countForDay} narudžbin${countForDay === 1 ? 'a' : 'e'} · ${totalForDay.toLocaleString('sr')} RSD</span>
+        </div>
+        ${slotsHtml}
+      </div>
+    `;
+  }).join('');
+}
+
+function renderRasporedWrapper() { renderRaspored(); }
 
 function updateOrderStatus(id, status) {
   // [DB] → PATCH /api/orders/:id { status }
