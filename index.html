@@ -294,6 +294,7 @@
 
   .cart-items {
     flex: 1; overflow-y: auto; padding: 16px 24px;
+    display: flex; flex-direction: column;
   }
   .cart-item {
     display: flex; align-items: center; gap: 12px;
@@ -531,50 +532,11 @@
       <span>UKUPNO:</span>
       <span id="cartTotal">0 RSD</span>
     </div>
-    <div class="checkout-section" id="checkoutSection" style="display:none">
-      <h3>PODACI ZA DOSTAVU</h3>
-      <div class="form-group">
-        <label>Vaše ime i prezime</label>
-        <input type="text" class="form-control" id="custName" placeholder="npr. Petar Petrović">
-      </div>
-      <div class="form-group">
-        <label>Telefon</label>
-        <input type="tel" class="form-control" id="custPhone" placeholder="+381 6x xxx xxx">
-      </div>
-      <div class="form-group">
-        <label>Adresa (ulica i broj)</label>
-        <input type="text" class="form-control" id="custAddress" placeholder="npr. Glavna 12">
-      </div>
-      <div class="form-group">
-        <label>Selo</label>
-        <select class="form-control" id="custVillage">
-          <option value="">— Izaberite selo —</option>
-          <option>Mali Požarevac</option>
-          <option>Mala Ivanča</option>
-          <option>Mali Popović</option>
-          <option>Senaja</option>
-          <option>Šepšin</option>
-          <option>Đurinci</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Datum dostave</label>
-        <input type="date" class="form-control" id="custDate" min="">
-      </div>
-      <div class="form-group">
-        <label>Termin dostave</label>
-        <div class="slot-options" id="slotOptions"></div>
-      </div>
-      <div class="form-group">
-        <label>Napomena (opciono)</label>
-        <input type="text" class="form-control" id="custNote" placeholder="npr. Zvati pre dolaska">
-      </div>
-      <button class="order-btn" id="orderBtn" onclick="placeOrder()">NARUČI →</button>
-      <p class="payment-note">💶 Plaćanje pouzećem pri dostavi</p>
-    </div>
     <button class="order-btn" id="proceedBtn" onclick="showCheckout()" style="display:none">
       NASTAVAK →
     </button>
+    <button class="order-btn" id="orderBtn" onclick="placeOrder()" style="display:none">NARUČI →</button>
+    <p class="payment-note" id="paymentNote" style="display:none">💶 Plaćanje pouzećem pri dostavi</p>
   </div>
 </div>
 
@@ -693,12 +655,55 @@ function updateCartUI() {
   if (cart.length === 0) {
     itemsEl.innerHTML = `<div class="cart-empty"><div class="icon">🛒</div>Korpa je prazna</div>`;
     document.getElementById('proceedBtn').style.display = 'none';
-    document.getElementById('checkoutSection').style.display = 'none';
+    document.getElementById('orderBtn').style.display = 'none';
+    document.getElementById('paymentNote').style.display = 'none';
     document.getElementById('cartTotal').textContent = '0 RSD';
     clearBtn.style.display = 'none';
     return;
   }
   clearBtn.style.display = 'block';
+
+  const checkoutHtml = `
+    <div class="checkout-section" id="checkoutSection" style="display:none;margin-top:16px">
+      <h3>PODACI ZA DOSTAVU</h3>
+      <div class="form-group">
+        <label>Vaše ime i prezime</label>
+        <input type="text" class="form-control" id="custName" placeholder="npr. Petar Petrović">
+      </div>
+      <div class="form-group">
+        <label>Telefon</label>
+        <input type="tel" class="form-control" id="custPhone" placeholder="+381 6x xxx xxx">
+      </div>
+      <div class="form-group">
+        <label>Adresa (ulica i broj)</label>
+        <input type="text" class="form-control" id="custAddress" placeholder="npr. Glavna 12">
+      </div>
+      <div class="form-group">
+        <label>Selo</label>
+        <select class="form-control" id="custVillage">
+          <option value="">— Izaberite selo —</option>
+          <option>Mali Požarevac</option>
+          <option>Mala Ivanča</option>
+          <option>Mali Popović</option>
+          <option>Senaja</option>
+          <option>Šepšin</option>
+          <option>Đurinci</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Datum dostave</label>
+        <input type="date" class="form-control" id="custDate">
+      </div>
+      <div class="form-group">
+        <label>Termin dostave</label>
+        <div class="slot-options" id="slotOptions"></div>
+      </div>
+      <div class="form-group">
+        <label>Napomena (opciono)</label>
+        <input type="text" class="form-control" id="custNote" placeholder="npr. Zvati pre dolaska">
+      </div>
+    </div>
+  `;
 
   itemsEl.innerHTML = cart.map(item => `
     <div class="cart-item">
@@ -709,14 +714,14 @@ function updateCartUI() {
       <div class="cart-item-price">${(item.qty * item.price).toLocaleString('sr')} RSD</div>
       <button class="cart-item-remove" onclick="removeFromCart('${item.id}')">✕</button>
     </div>
-  `).join('');
+  `).join('') + checkoutHtml;
 
   document.getElementById('cartTotal').textContent =
     cartTotal().toLocaleString('sr') + ' RSD';
 
-  if (document.getElementById('checkoutSection').style.display !== 'block') {
-    document.getElementById('proceedBtn').style.display = 'block';
-  }
+  document.getElementById('proceedBtn').style.display = 'block';
+  document.getElementById('orderBtn').style.display = 'none';
+  document.getElementById('paymentNote').style.display = 'none';
 }
 
 // ══════════════════════════════════════════════
@@ -825,16 +830,20 @@ function toggleCart() {
 // ══════════════════════════════════════════════
 function showCheckout() {
   document.getElementById('proceedBtn').style.display = 'none';
+  document.getElementById('orderBtn').style.display = 'block';
+  document.getElementById('paymentNote').style.display = 'block';
   const sec = document.getElementById('checkoutSection');
   sec.style.display = 'block';
 
-  // Set min date to tomorrow
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   document.getElementById('custDate').min = tomorrow.toISOString().split('T')[0];
   document.getElementById('custDate').value = tomorrow.toISOString().split('T')[0];
 
   renderSlots();
+
+  // Skroluj do forme
+  setTimeout(() => sec.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
 }
 
 let selectedSlot = null;
