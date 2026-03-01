@@ -386,6 +386,26 @@
     color: var(--smoke); font-size: 15px;
   }
 
+  .section-title-iz {
+    font-family: 'Oswald', sans-serif;
+    font-size: 15px; letter-spacing: 2px;
+    color: var(--fog); border-left: 3px solid var(--rust);
+    padding-left: 12px; margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+  .bar-wrap {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 4px; flex: 1; min-width: 36px;
+  }
+  .bar-label { font-size: 10px; color: var(--smoke); white-space: nowrap; transform: rotate(-45deg); transform-origin: top left; margin-top: 6px; }
+  .bar-val { font-family: 'Oswald', sans-serif; font-size: 11px; color: var(--gold); }
+  .bar {
+    width: 100%; background: var(--rust);
+    transition: height 0.4s ease;
+    min-height: 4px;
+  }
+  .iz-top { color: var(--gold); font-family: 'Oswald', sans-serif; }
+
   /* SCROLLBAR */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: var(--steel); }
@@ -437,6 +457,9 @@
       </a>
       <a class="nav-item" onclick="showTab('inventory')" href="#">
         📦 <span>Inventar</span>
+      </a>
+      <a class="nav-item" onclick="showTab('izvestaji')" href="#">
+        📊 <span>Izveštaji</span>
       </a>
       <a class="nav-item" onclick="showTab('slots')" href="#">
         🕐 <span>Termini dostave</span>
@@ -539,6 +562,70 @@
             </thead>
             <tbody id="inventoryBody"></tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- IZVESTAJI TAB -->
+    <div class="tab-section" id="tab-izvestaji">
+      <div class="content-header">
+        <h1>📊 IZVEŠTAJI</h1>
+        <button class="btn btn-sec btn-sm" onclick="exportIzvestaj()">⬇ Export CSV</button>
+      </div>
+      <div class="content-body">
+
+        <!-- DATE RANGE PICKER -->
+        <div style="background:var(--steel-mid);border:1px solid var(--steel-light);border-left:4px solid var(--rust);padding:20px;margin-bottom:24px;display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap">
+          <div>
+            <label style="display:block;font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:1px;color:var(--smoke);margin-bottom:5px;text-transform:uppercase">Od datuma</label>
+            <input type="date" class="form-control-a" id="izFrom" style="width:180px">
+          </div>
+          <div>
+            <label style="display:block;font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:1px;color:var(--smoke);margin-bottom:5px;text-transform:uppercase">Do datuma</label>
+            <input type="date" class="form-control-a" id="izTo" style="width:180px">
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-sm" onclick="setRange('today')">Danas</button>
+            <button class="btn btn-sm" onclick="setRange('week')">Ova nedelja</button>
+            <button class="btn btn-sm" onclick="setRange('month')">Ovaj mesec</button>
+            <button class="btn btn-sm" onclick="setRange('all')">Sve vreme</button>
+          </div>
+          <button class="btn" onclick="renderIzvestaj()" style="margin-left:auto">PRIKAŽI →</button>
+        </div>
+
+        <!-- SUMMARY CARDS -->
+        <div class="stats-grid" id="izStats" style="margin-bottom:28px"></div>
+
+        <!-- PRODUCTS TABLE -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;flex-wrap:wrap" id="izGrids">
+          <div>
+            <div class="section-title-iz">📦 Prodaja po artiklima</div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Artikal</th><th>Kategorija</th><th>Kom</th><th>Prihod</th></tr></thead>
+                <tbody id="izProductsBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <div class="section-title-iz">📍 Prodaja po mestu</div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Mesto</th><th>Narudžbina</th><th>Ukupno</th></tr></thead>
+                <tbody id="izVillagesBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- DAILY CHART -->
+        <div style="margin-top:24px">
+          <div class="section-title-iz">📈 Prihod po danima</div>
+          <div id="izChart" style="background:var(--steel-mid);border:1px solid var(--steel-light);padding:24px;min-height:180px;display:flex;align-items:flex-end;gap:4px;overflow-x:auto"></div>
+        </div>
+
+        <div class="raspored-empty" id="izEmpty" style="display:none">
+          📭 Nema isporučenih narudžbina u izabranom periodu
         </div>
       </div>
     </div>
@@ -701,6 +788,7 @@ function showTab(tab) {
 
   if (tab === 'orders') renderOrders();
   if (tab === 'raspored') renderRaspored();
+  if (tab === 'izvestaji') initIzvestaji();
   if (tab === 'inventory') renderInventory();
   if (tab === 'slots') renderSlots();
 }
@@ -910,6 +998,191 @@ function renderRaspored() {
       </div>
     `;
   }).join('');
+}
+
+// ══════════════════════════════════════════════
+// IZVEŠTAJI
+// ══════════════════════════════════════════════
+function setRange(type) {
+  const now = new Date();
+  let from, to;
+  to = now.toISOString().split('T')[0];
+
+  if (type === 'today') {
+    from = to;
+  } else if (type === 'week') {
+    const d = new Date(now);
+    d.setDate(d.getDate() - d.getDay() + 1);
+    from = d.toISOString().split('T')[0];
+  } else if (type === 'month') {
+    from = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+  } else {
+    from = '2020-01-01';
+    to = '2099-12-31';
+  }
+
+  document.getElementById('izFrom').value = from;
+  document.getElementById('izTo').value = to;
+  renderIzvestaj();
+}
+
+function renderIzvestaj() {
+  const from = document.getElementById('izFrom').value;
+  const to = document.getElementById('izTo').value;
+  if (!from || !to) { alert('Izaberite opseg datuma.'); return; }
+
+  const allOrders = getOrders();
+  // Uzimamo SVE narudžbine u opsegu (ne samo isporučene) osim otkazanih
+  const orders = allOrders.filter(o => {
+    const d = o.delivery.date;
+    return d >= from && d <= to && o.status !== 'otkazano';
+  });
+
+  document.getElementById('izEmpty').style.display = orders.length === 0 ? 'block' : 'none';
+
+  // ── SUMMARY ──
+  const totalRevenue = orders.reduce((s,o) => s + o.total, 0);
+  const delivered = orders.filter(o => o.status === 'isporuceno');
+  const deliveredRevenue = delivered.reduce((s,o) => s + o.total, 0);
+  const avgOrder = orders.length ? Math.round(totalRevenue / orders.length) : 0;
+  const uniqueMesta = new Set(orders.map(o => o.customer.village || o.customer.mesto)).size;
+
+  document.getElementById('izStats').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Ukupno narudžbina</div>
+      <div class="stat-value">${orders.length}</div>
+      <div class="stat-sub">U izabranom periodu</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Ukupan prihod</div>
+      <div class="stat-value">${Math.floor(totalRevenue/1000)}K</div>
+      <div class="stat-sub">${totalRevenue.toLocaleString('sr')} RSD</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Isporučeno / naplaćeno</div>
+      <div class="stat-value">${delivered.length}</div>
+      <div class="stat-sub">${deliveredRevenue.toLocaleString('sr')} RSD</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Prosečna narudžbina</div>
+      <div class="stat-value">${Math.floor(avgOrder/1000) > 0 ? Math.floor(avgOrder/1000)+'K' : avgOrder}</div>
+      <div class="stat-sub">${avgOrder.toLocaleString('sr')} RSD · ${uniqueMesta} mesta</div>
+    </div>
+  `;
+
+  // ── ARTIKLI ──
+  const productMap = {};
+  orders.forEach(o => {
+    o.items.forEach(item => {
+      if (!productMap[item.name]) productMap[item.name] = { name: item.name, category: item.category || '—', qty: 0, revenue: 0 };
+      productMap[item.name].qty += item.qty;
+      productMap[item.name].revenue += item.qty * item.price;
+    });
+  });
+  const products = Object.values(productMap).sort((a,b) => b.revenue - a.revenue);
+
+  document.getElementById('izProductsBody').innerHTML = products.length === 0
+    ? `<tr><td colspan="4" style="color:var(--smoke);text-align:center;padding:20px">Nema podataka</td></tr>`
+    : products.map((p, i) => `
+      <tr>
+        <td>${i === 0 ? '🥇 ' : i === 1 ? '🥈 ' : i === 2 ? '🥉 ' : ''}<strong>${p.name}</strong></td>
+        <td><span style="font-size:11px;color:var(--smoke)">${p.category}</span></td>
+        <td style="font-family:'Oswald',sans-serif;color:var(--fog)">${p.qty}</td>
+        <td class="iz-top">${p.revenue.toLocaleString('sr')} RSD</td>
+      </tr>
+    `).join('');
+
+  // ── MESTA ──
+  const villageMap = {};
+  orders.forEach(o => {
+    const v = o.customer.village || o.customer.mesto || 'Nepoznato';
+    if (!villageMap[v]) villageMap[v] = { count: 0, total: 0 };
+    villageMap[v].count++;
+    villageMap[v].total += o.total;
+  });
+  const villages = Object.entries(villageMap).sort((a,b) => b[1].total - a[1].total);
+
+  document.getElementById('izVillagesBody').innerHTML = villages.length === 0
+    ? `<tr><td colspan="3" style="color:var(--smoke);text-align:center;padding:20px">Nema podataka</td></tr>`
+    : villages.map(([name, d]) => `
+      <tr>
+        <td><strong>${name}</strong></td>
+        <td style="font-family:'Oswald',sans-serif;color:var(--fog)">${d.count}</td>
+        <td class="iz-top">${d.total.toLocaleString('sr')} RSD</td>
+      </tr>
+    `).join('');
+
+  // ── GRAFIKON PO DANIMA ──
+  const dayMap = {};
+  orders.forEach(o => {
+    const d = o.delivery.date;
+    if (!dayMap[d]) dayMap[d] = 0;
+    dayMap[d] += o.total;
+  });
+  const days = Object.entries(dayMap).sort((a,b) => a[0].localeCompare(b[0]));
+  const maxVal = Math.max(...days.map(d => d[1]), 1);
+  const chartH = 140;
+
+  const MONTHS_SR = ['jan','feb','mar','apr','maj','jun','jul','avg','sep','okt','nov','dec'];
+
+  document.getElementById('izChart').innerHTML = days.length === 0
+    ? `<div style="color:var(--smoke);margin:auto">Nema podataka</div>`
+    : days.map(([date, val]) => {
+        const d = new Date(date);
+        const label = `${d.getDate()}. ${MONTHS_SR[d.getMonth()]}`;
+        const h = Math.max(Math.round((val / maxVal) * chartH), 4);
+        return `
+          <div class="bar-wrap">
+            <div class="bar-val">${val >= 1000 ? Math.round(val/1000)+'K' : val}</div>
+            <div class="bar" style="height:${h}px" title="${label}: ${val.toLocaleString('sr')} RSD"></div>
+            <div class="bar-label">${label}</div>
+          </div>
+        `;
+      }).join('');
+}
+
+function exportIzvestaj() {
+  const from = document.getElementById('izFrom').value;
+  const to = document.getElementById('izTo').value;
+  const orders = getOrders().filter(o => {
+    const d = o.delivery.date;
+    return d >= from && d <= to && o.status !== 'otkazano';
+  });
+
+  // Flatten po artiklima
+  const rows = [];
+  orders.forEach(o => {
+    o.items.forEach(item => {
+      rows.push([
+        o.id, o.delivery.date, o.customer.name,
+        o.customer.village || o.customer.mesto || '',
+        item.name, item.qty, item.price, item.qty * item.price, o.status
+      ]);
+    });
+  });
+
+  const csv = [
+    ['ID narudžbine','Datum dostave','Kupac','Mesto','Artikal','Količina','Cena','Ukupno','Status'],
+    ...rows
+  ].map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `ferrofix_izvestaj_${from}_${to}.csv`;
+  a.click();
+}
+
+// ══════════════════════════════════════════════
+// IZVEŠTAJI — init defaults
+// ══════════════════════════════════════════════
+function initIzvestaji() {
+  const now = new Date();
+  const firstDay = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+  const today = now.toISOString().split('T')[0];
+  document.getElementById('izFrom').value = firstDay;
+  document.getElementById('izTo').value = today;
+  renderIzvestaj();
 }
 
 function renderRasporedWrapper() { renderRaspored(); }
