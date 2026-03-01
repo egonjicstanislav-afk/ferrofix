@@ -513,7 +513,17 @@
 <div class="cart-drawer" id="cartDrawer">
   <div class="cart-header">
     <h2>🛒 KORPA</h2>
-    <button class="close-btn" onclick="toggleCart()">✕</button>
+    <div style="display:flex;align-items:center;gap:12px">
+      <button id="clearCartBtn" onclick="clearCart()"
+        style="background:none;border:1px solid var(--danger);color:var(--danger);
+               padding:5px 12px;cursor:pointer;font-family:'Oswald',sans-serif;
+               font-size:12px;letter-spacing:1px;display:none;transition:all 0.2s"
+        onmouseover="this.style.background='rgba(192,57,43,0.2)'"
+        onmouseout="this.style.background='none'">
+        🗑 ISPRAZNI
+      </button>
+      <button class="close-btn" onclick="toggleCart()">✕</button>
+    </div>
   </div>
   <div class="cart-items" id="cartItems"></div>
   <div class="cart-footer">
@@ -643,6 +653,13 @@ function getProducts() {
 let cart = JSON.parse(localStorage.getItem('ff_cart') || '[]');
 function saveCart() { localStorage.setItem('ff_cart', JSON.stringify(cart)); }
 
+function clearCart() {
+  if (!confirm('Isprazni korpu?')) return;
+  cart = [];
+  saveCart();
+  updateCartUI();
+}
+
 function addToCart(productId, qty) {
   const products = getProducts();
   const product = products.find(p => p.id === productId);
@@ -672,13 +689,16 @@ function updateCartUI() {
   document.getElementById('cartCount').textContent = count;
 
   const itemsEl = document.getElementById('cartItems');
+  const clearBtn = document.getElementById('clearCartBtn');
   if (cart.length === 0) {
     itemsEl.innerHTML = `<div class="cart-empty"><div class="icon">🛒</div>Korpa je prazna</div>`;
     document.getElementById('proceedBtn').style.display = 'none';
     document.getElementById('checkoutSection').style.display = 'none';
     document.getElementById('cartTotal').textContent = '0 RSD';
+    clearBtn.style.display = 'none';
     return;
   }
+  clearBtn.style.display = 'block';
 
   itemsEl.innerHTML = cart.map(item => `
     <div class="cart-item">
