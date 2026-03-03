@@ -268,7 +268,7 @@
     <!-- SETTINGS -->
     <div class="tab-section" id="tab-settings">
       <div class="content-header"><h1>⚙ PODEŠAVANJA</h1></div>
-      <div class="content-body" style="max-width:480px">
+      <div class="content-body" style="max-width:520px">
         <div style="background:var(--steel-mid);border:1px solid var(--steel-light);border-top:3px solid var(--rust);padding:24px;margin-bottom:20px">
           <h3 style="font-family:'Oswald',sans-serif;font-size:16px;letter-spacing:2px;margin-bottom:18px;color:var(--fog)">PROMENA LOZINKE</h3>
           <div class="form-group"><label style="display:block;font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:1px;color:var(--smoke);margin-bottom:5px;text-transform:uppercase">Trenutna lozinka</label><input type="password" class="form-control-a" id="curPass" placeholder="••••••••"></div>
@@ -276,6 +276,16 @@
           <div class="form-group"><label style="display:block;font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:1px;color:var(--smoke);margin-bottom:5px;text-transform:uppercase">Potvrdi novu lozinku</label><input type="password" class="form-control-a" id="confPass" placeholder="••••••••"></div>
           <button class="btn" onclick="changePass()">SAČUVAJ LOZINKU</button>
           <div id="passMsg" style="margin-top:10px;font-size:13px"></div>
+        </div>
+        <div style="background:var(--steel-mid);border:1px solid var(--steel-light);border-top:3px solid var(--rust);padding:24px">
+          <h3 style="font-family:'Oswald',sans-serif;font-size:16px;letter-spacing:2px;margin-bottom:6px;color:var(--fog)">📧 OBAVEŠTENJA NARUDŽBINA</h3>
+          <p style="color:var(--smoke);font-size:13px;margin-bottom:16px">Mejl adrese koje primaju obaveštenje kada stigne nova narudžbina.</p>
+          <div id="emailsList" style="margin-bottom:16px"></div>
+          <div style="display:flex;gap:8px">
+            <input type="email" class="form-control-a" id="newEmailInput" placeholder="npr. milos@gmail.com" style="flex:1" onkeydown="if(event.key==='Enter')addNotificationEmail()">
+            <button class="btn" onclick="addNotificationEmail()">+ DODAJ</button>
+          </div>
+          <div id="emailsMsg" style="margin-top:10px;font-size:13px"></div>
         </div>
       </div>
     </div>
@@ -407,6 +417,7 @@ function showTab(tab, el) {
   if (tab === 'inventory') renderInventory();
   if (tab === 'izvestaji') initIzvestaji();
   if (tab === 'slots') renderSlots();
+  if (tab === 'settings') loadNotificationEmails();
 }
 
 // ══════════════════════════════════════════════
@@ -919,6 +930,55 @@ function initIzvestaji() {
   document.getElementById('izFrom').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
   document.getElementById('izTo').value = now.toISOString().split('T')[0];
   renderIzvestaj();
+}
+
+// ══════════════════════════════════════════════
+// NOTIFICATION EMAILS
+// ══════════════════════════════════════════════
+async function loadNotificationEmails() {
+  const { data, error } = await db.from('notification_emails').select('*').order('created_at');
+  if (error) { console.error(error); return; }
+  const el = document.getElementById('emailsList');
+  if (!data || data.length === 0) {
+    el.innerHTML = `<p style="color:var(--smoke);font-size:13px;padding:8px 0">Nema dodatih mejl adresa.</p>`;
+    return;
+  }
+  el.innerHTML = data.map(e => `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--steel);border:1px solid var(--steel-light);margin-bottom:8px">
+      <span style="flex:1;font-size:14px">${e.email}</span>
+      <button class="toggle-btn ${e.active ? 'on' : 'off'}" style="padding:4px 14px;font-size:12px" onclick="toggleNotifEmail('${e.id}',${!e.active})">${e.active ? '✓ AKTIVNO' : '✗ ISKLJUČENO'}</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteNotifEmail('${e.id}')">✕</button>
+    </div>`).join('');
+}
+
+async function addNotificationEmail() {
+  const input = document.getElementById('newEmailInput');
+  const email = input.value.trim();
+  const msg = document.getElementById('emailsMsg');
+  if (!email || !email.includes('@')) {
+    msg.style.color = '#e74c3c'; msg.textContent = 'Unesite ispravnu mejl adresu.'; return;
+  }
+  const { error } = await db.from('notification_emails').insert([{ email, active: true }]);
+  if (error) {
+    msg.style.color = '#e74c3c';
+    msg.textContent = error.code === '23505' ? 'Ta adresa je već dodata.' : 'Greška pri dodavanju.';
+    return;
+  }
+  input.value = '';
+  msg.style.color = '#58d68d'; msg.textContent = 'Mejl adresa dodata!';
+  setTimeout(() => msg.textContent = '', 3000);
+  loadNotificationEmails();
+}
+
+async function toggleNotifEmail(id, active) {
+  await db.from('notification_emails').update({ active }).eq('id', id);
+  loadNotificationEmails();
+}
+
+async function deleteNotifEmail(id) {
+  if (!confirm('Ukloniti ovu mejl adresu?')) return;
+  await db.from('notification_emails').delete().eq('id', id);
+  loadNotificationEmails();
 }
 
 // ══════════════════════════════════════════════

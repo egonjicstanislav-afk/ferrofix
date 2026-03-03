@@ -59,6 +59,16 @@ create policy "Anon insert slots" on slots for insert with check (true);
 create policy "Anon update slots" on slots for update using (true);
 create policy "Anon delete slots" on slots for delete using (true);
 
+-- NOTIFICATION EMAILS
+create table if not exists notification_emails (
+  id uuid default gen_random_uuid() primary key,
+  email text not null unique,
+  active boolean default true,
+  created_at timestamptz default now()
+);
+alter table notification_emails enable row level security;
+create policy "Anon manage notification emails" on notification_emails for all using (true);
+
 -- =============================================
 -- DEFAULT SLOTOVI
 -- =============================================
