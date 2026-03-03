@@ -191,6 +191,9 @@
   <p>Miloš Nikolić · <a href="tel:+38163473378">+381 63 473 378</a><br>
   Dostava: Mali Požarevac · Mala Ivanča · Mali Popović · Senaja · Šepšin · Đurinci</p>
   <a class="admin-link" href="admin.html">⚙ admin</a>
+  <div style="margin-top:20px;font-size:12px;color:var(--steel-light);font-family:'Oswald',sans-serif;letter-spacing:2px">
+    👁 POSETA: <span id="visitCount" style="color:var(--smoke)">...</span>
+  </div>
 </footer>
 
 <script>
@@ -452,7 +455,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderCategories();
   renderProducts();
   updateCartUI();
+  trackVisit();
 });
+
+async function trackVisit() {
+  try {
+    // Pročitaj trenutni broj
+    const { data } = await db.from('stats').select('value').eq('key', 'visits').single();
+    const current = data ? data.value : 0;
+    // Prikaži odmah
+    document.getElementById('visitCount').textContent = (current + 1).toLocaleString('sr');
+    // Uvećaj za 1 (samo jednom po sesiji)
+    if (!sessionStorage.getItem('ff_visited')) {
+      sessionStorage.setItem('ff_visited', '1');
+      await db.from('stats').update({ value: current + 1 }).eq('key', 'visits');
+    }
+  } catch (e) { document.getElementById('visitCount').textContent = '—'; }
+}
 </script>
 </body>
 </html>
