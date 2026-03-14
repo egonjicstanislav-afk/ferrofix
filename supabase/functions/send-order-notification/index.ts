@@ -60,23 +60,22 @@ Upravljaj narudžbinama: https://ferrofix.shop/admin.html
     const resendKey = Deno.env.get('RESEND_API_KEY');
     const fromEmail = Deno.env.get('NOTIFY_FROM_EMAIL') || 'onboarding@resend.dev';
 
-    for (const { email } of emails) {
-      const res = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${resendKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: `FerroFix <${fromEmail}>`,
-          to: [email],
-          subject: `🛒 Nova narudžbina ${order.id} — FerroFix`,
-          text: emailText,
-        }),
-      });
-      if (!res.ok) {
-        console.error('Resend greška:', await res.text());
-      }
+    const allEmails = emails.map((e: any) => e.email);
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${resendKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: `FerroFix <${fromEmail}>`,
+        to: allEmails,
+        subject: `🛒 Nova narudžbina ${order.id} — FerroFix`,
+        text: emailText,
+      }),
+    });
+    if (!res.ok) {
+      console.error('Resend greška:', await res.text());
     }
 
     return new Response('OK', { status: 200 });
